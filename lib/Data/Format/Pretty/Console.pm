@@ -45,7 +45,8 @@ Hash, format_pretty({foo=>"data", bar=>"format", baz=>"pretty", qux=>"console"})
  | qux | console |
  '-----+---------'
 
-2-dimensional array, format_pretty([ [1, 2, ""], [28, "bar", 3], ["foo", 3, undef] ]):
+2-dimensional array, format_pretty([ [1, 2, ""], [28, "bar", 3], ["foo", 3,
+undef] ]):
 
  .-----------------------------.
  | column0 | column1 | column2 |
@@ -58,9 +59,17 @@ Hash, format_pretty({foo=>"data", bar=>"format", baz=>"pretty", qux=>"console"})
 An array of hashrefs, such as commonly found if you use DBI's fetchrow_hashref()
 and friends, format_pretty([ {a=>1, b=>2}, {b=>2, c=>3}, {c=>4} ]):
 
+ .-----------.
+ | a | b | c |
+ +---+---+---+
+ | 1 | 2 |   |
+ |   | 2 | 3 |
+ |   |   | 4 |
+ '---+---+---'
 
-
-Some more complex data, format_pretty({summary  => "Blah...", users => [{name=>"budi", domains=>["foo.com", "bar.com"], quota=>"1000"}, {name=>"arif", domains=>["baz.com"], quota=>"2000"}], verified => 0}):
+Some more complex data, format_pretty({summary => "Blah...", users =>
+[{name=>"budi", domains=>["foo.com", "bar.com"], quota=>"1000"}, {name=>"arif",
+domains=>["baz.com"], quota=>"2000"}], verified => 0}):
 
  summary:
  Blah...
@@ -76,7 +85,8 @@ Some more complex data, format_pretty({summary  => "Blah...", users => [{name=>"
  verified:
  0
 
-Structures which can't be handled yet will simply be output as YAML, format_pretty({a {b=>1}}):
+Structures which can't be handled yet will simply be output as YAML,
+format_pretty({a {b=>1}}):
 
  ---
  a:
@@ -167,29 +177,6 @@ sub _detect_struct {
             }
         }
 
-      CHECK_LIST:
-        {
-            if (ref($data) eq 'ARRAY') {
-                for (@$data) {
-                    last CHECK_LIST if ref($_);
-                }
-                $struct = "list";
-                last CHECK_FORMAT;
-            }
-        }
-
-        # hash of scalars
-      CHECK_HASH:
-        {
-            if (ref($data) eq 'HASH') {
-                for (values %$data) {
-                    last CHECK_HASH if ref($_);
-                }
-                $struct = "hash";
-                last CHECK_FORMAT;
-            }
-        }
-
       CHECK_AOA:
         {
             if (ref($data) eq 'ARRAY') {
@@ -220,6 +207,18 @@ sub _detect_struct {
             }
         }
 
+        # list of scalars/cells
+      CHECK_LIST:
+        {
+            if (ref($data) eq 'ARRAY') {
+                for (@$data) {
+                    last CHECK_LIST if ref($_);
+                }
+                $struct = "list";
+                last CHECK_FORMAT;
+            }
+        }
+
         # hash which contains at least one "table" (list/aoa/aoh)
       CHECK_HOT:
         {
@@ -235,6 +234,19 @@ sub _detect_struct {
             $struct = "hot";
             last CHECK_FORMAT;
         }
+
+        # hash of scalars/cells
+      CHECK_HASH:
+        {
+            if (ref($data) eq 'HASH') {
+                for (values %$data) {
+                    last CHECK_HASH if !defined(_format_cell($_));
+                }
+                $struct = "hash";
+                last CHECK_FORMAT;
+            }
+        }
+
     }
 
     ($struct, $struct_meta);
@@ -260,7 +272,7 @@ sub _format {
             my $t = Text::ASCIITable->new(); #{headingText => 'blah'}
             $t->setCols("data");
             for my $i (0..@$data-1) {
-                $t->addRow([$data->[$i]]);
+                $t->addRow(_format_cell($data->[$i]));
             }
             return "$t"; # stringify
         } else {
@@ -278,7 +290,7 @@ sub _format {
             my $t = Text::ASCIITable->new(); #{headingText => 'blah'}
             $t->setCols("key", "value");
             for my $k (sort keys %$data) {
-                $t->addRow($k, $data->{$k});
+                $t->addRow($k, _format_cell($data->{$k}));
             }
             return "$t"; # stringify
         } else {
