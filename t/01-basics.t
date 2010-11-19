@@ -4,16 +4,49 @@ use strict;
 use Test::More tests => 8;
 use Data::Format::Pretty::Console qw(format_pretty);
 
+my @data = (
+    {
+        data        => undef,
+        detect      => "scalar",
+        output      => "\n",
+    },
+
+    {
+        data        => "foo",
+        detect      => "scalar",
+        output      => "foo\n",
+    },
+
+    {
+        data        => [],
+        detect      => "aoa",
+    },
+
+    {
+        data        => [ [1,2],[3,4] ],
+        detect      => "aoa",
+        output_re   => qr/---/,
+        ouput_ni    => "1\t2\n3\t4\n",
+    },
+
+    {
+        data        => [{}],
+        detect      => "aoh",
+    },
+
+    {
+        data        => [{}],
+        detect      => "aoh",
+    },
+
+);
+
+sub test_dnf { # detect and format
+}
+
 {
     local $Data::Format::Pretty::Console::Interactive = 1;
 
-    like(format_pretty("foo"),       qr/foo/, "scalar");
-    like(format_pretty([1]),         qr/---/, "list");
-    like(format_pretty({a=>1}),      qr/---/, "hash");
-    like(format_pretty([[1]]),       qr/---/, "aoa");
-    like(format_pretty([{a=>1}]),    qr/---/, "aoh");
-    like(format_pretty({a=>[[1]]}),  qr/---/, "hot");
-    like(format_pretty({a=>{b=>1}}), qr/b: 1/, "unknown structure");
 
 }
 
