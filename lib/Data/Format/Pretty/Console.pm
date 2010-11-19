@@ -7,8 +7,7 @@ In your program:
 
  use Data::Format::Pretty::Console qw(format_pretty);
  ...
- @result = (...);
- print format_pretty(\@result);
+ print format_pretty($result);
 
 Some example output:
 
