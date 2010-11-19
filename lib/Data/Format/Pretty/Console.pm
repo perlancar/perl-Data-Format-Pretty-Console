@@ -26,6 +26,14 @@ List, format_pretty([qw/foo bar baz qux/]):
  | qux  |
  '------'
 
+The same list, when program output is being piped (that is, (-t STDOUT) is
+false):
+
+ foo
+ bar
+ baz
+ qux
+
 Hash, format_pretty({foo=>"data", bar=>"format", baz=>"pretty", qux=>"console"}):
 
  .---------------.
@@ -46,6 +54,11 @@ Hash, format_pretty({foo=>"data", bar=>"format", baz=>"pretty", qux=>"console"})
  |      28 | bar     |       3 |
  | foo     |       3 |         |
  '---------+---------+---------'
+
+An array of hashrefs, such as commonly found if you use DBI's fetchrow_hashref()
+and friends, format_pretty([ {a=>1, b=>2}, {b=>2, c=>3}, {c=>4} ]):
+
+
 
 Some more complex data, format_pretty({summary  => "Blah...", users => [{name=>"budi", domains=>["foo.com", "bar.com"], quota=>"1000"}, {name=>"arif", domains=>["baz.com"], quota=>"2000"}], verified => 0}):
 
@@ -77,8 +90,8 @@ suitable for console programs. The idea of this module is that for you to just
 merrily dump data structure to the console, and this module will figure out how
 to best display your data to the end-user.
 
-Currently this module tries to display the data as a nice ASCII table, and
-failing that, display it as YAML.
+Currently this module tries to display the data mostly as a nice ASCII table (or
+a series of ASCII tables), and failing that, display it as YAML.
 
 This module takes piping into consideration, and will output a simpler, more
 suitable format when your user pipes your program's output into some other
