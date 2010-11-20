@@ -1,5 +1,13 @@
 Revision history for Data-Format-Pretty-Console
 
+0.02     2010-11-20
+
+         In displaying list/hash, list elements/hash values are now "cells"
+         (short scalars or short arrays) instead of just scalars.
+
+         Rewrite tests.
+
+
 0.01     2010-11-19
 
          First release.
