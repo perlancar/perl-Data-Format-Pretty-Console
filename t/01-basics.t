@@ -1,57 +1,158 @@
 #!perl -Tw
 
 use strict;
-use Test::More tests => 8;
+use Test::More tests => 22;
+use Data::Dump::Partial qw(dumpp);
 use Data::Format::Pretty::Console qw(format_pretty);
+use YAML::Any;
 
 my @data = (
     {
-        data        => undef,
-        detect      => "scalar",
-        output      => "\n",
+        data         => undef,
+        struct       => "scalar",
+        output       => "\n",
     },
 
     {
-        data        => "foo",
-        detect      => "scalar",
-        output      => "foo\n",
+        data         => "foo",
+        struct       => "scalar",
+        output       => "foo\n",
     },
 
     {
-        data        => [],
-        detect      => "aoa",
+        data         => [],
+        struct       => "aoa",
     },
 
     {
-        data        => [ [1,2],[3,4] ],
-        detect      => "aoa",
-        output_re   => qr/---/,
-        ouput_ni    => "1\t2\n3\t4\n",
+        data         => [ [1,2],[3,4] ],
+        struct       => "aoa",
+        output_re    => qr/---/,
+        ouput_ni     => "1\t2\n3\t4\n",
+        is_yaml      => 0,
     },
 
     {
-        data        => [{}],
-        detect      => "aoh",
+        data         => [{}],
+        struct       => "aoh",
     },
 
     {
-        data        => [{}],
-        detect      => "aoh",
+        data         => [{a=>1, b=>2}, {b=>3, c=>4}, {a=>5}],
+        struct       => "aoh",
+        output_re    => qr/^\|\s*5\s*\|\s*\|\s*\|$/m,
+        output_ni_re => qr/^5\t\t$/m,
+    },
+
+    {
+        data         => [ 1, 2, [3, 4] ],
+        struct       => "list",
+        output_re    => qr/^\| 3, 4.+---/sm,
+        ouput_ni_re  => qr/^3, 4\n/m,
+    },
+
+    {
+        data         => [ [1, 2, 3], [4, 5] ],
+        struct       => "list",
+        output_re    => qr/^\| 1, 2, 3/m,
+        ouput_ni_re  => qr/^1, 2, 3/m,
+    },
+
+    {
+        data         => {a=>1, b=>2},
+        struct       => "hash",
+        output_re    => qr/^\|\s*a\s*\|\s*1\s*\|$/sm,
+        ouput_ni_re  => qr/^a\t1$/m,
+    },
+
+    {
+        data         => {a=>1, b=>[2, 3]},
+        struct       => "hot",
+        output_re    => qr/^a:\n1\n\nb:\n.+---/,
+    },
+
+    {
+        data         => {a=>{}},
+        struct       => undef,
+        is_yaml      => 1,
     },
 
 );
 
-sub test_dnf { # detect and format
+sub is_yaml {
+    my ($data, $test_name) = @_;
+    eval { Load($data) };
+    ok(!$@, $test_name);
 }
 
-{
-    local $Data::Format::Pretty::Console::Interactive = 1;
-
-
+sub isnt_yaml {
+    my ($data, $test_name) = @_;
+    eval { Load($data) };
+    #XXX doesn't die?
+    #ok($@, $test_name);
+    #print "\$data=$data, \$@=$@\n";
 }
 
-{
-    local $Data::Format::Pretty::Console::Interactive = 0;
+ # detect and format
+sub test_dnf {
+    my ($spec) = @_;
+    my $data   = $spec->{data};
+    my $struct = $spec->{struct};
+    my $test_name = ($struct // "unknown") . ": " . dumpp($data);
 
-    like(format_pretty([1,2]),       qr/\A1\n2\n\z/, "list (ni)");
+    my ($s, $sm) =
+        Data::Format::Pretty::Console::detect_struct($data);
+    if (!$struct) {
+        ok(!$s, "$test_name: detect_struct: structure unknown");
+    } else {
+        is($s, $struct, "$test_name: detect_struct: structure is '$struct'");
+    }
+
+    if (exists($spec->{output}) || exists($spec->{output_re}) ||
+            exists($spec->{is_yaml})) {
+        my $output;
+        {
+            local $Data::Format::Pretty::Console::Interactive = 1;
+            $output = format_pretty($data);
+        }
+        if (exists($spec->{output})) {
+            is($output, $spec->{output}, "$test_name: output exact match");
+        }
+        if (exists($spec->{output_re})) {
+            like($output, $spec->{output_re}, "$test_name: output regex match");
+        }
+        if (exists($spec->{is_yaml})) {
+            if ($spec->{is_yaml}) {
+                is_yaml($output, "$test_name: is YAML");
+            } else {
+                isnt_yaml($output, "$test_name: is not YAML");
+            }
+        }
+    }
+
+    if (exists($spec->{output_ni}) || exists($spec->{output_ni_re}) ||
+            exists($spec->{is_yaml})) {
+        my $output;
+        {
+            local $Data::Format::Pretty::Console::Interactive = 0;
+            $output = format_pretty($data);
+        }
+        if (exists($spec->{output_ni})) {
+            is($output, $spec->{output_ni},
+               "$test_name: output exact match (ni)");
+        }
+        if (exists($spec->{output_ni_re})) {
+            like($output, $spec->{output_ni_re},
+                 "$test_name: output regex match (ni)");
+        }
+        if (exists($spec->{is_yaml})) {
+            if ($spec->{is_yaml}) {
+                is_yaml($output, "$test_name: is YAML (ni)");
+            } else {
+                isnt_yaml($output, "$test_name: is not YAML (ni)");
+            }
+        }
+    }
 }
+
+test_dnf($_) for @data;
