@@ -231,7 +231,7 @@ sub detect_struct {
             while (my ($k, $v) = each %$data) {
                 my ($s2, $sm2) = detect_struct($v, {skip_hot=>1});
                 last CHECK_HOT unless $s2;
-                $has_t = 1 if $s2 =~ /^(?:list|aoa|aoh)$/;
+                $has_t = 1 if $s2 =~ /^(?:list|aoa|aoh|hash)$/;
             }
             last CHECK_HOT unless $has_t;
             $struct = "hot";

@@ -1,7 +1,7 @@
 #!perl -Tw
 
 use strict;
-use Test::More tests => 22;
+use Test::More tests => 24;
 use Data::Dump::Partial qw(dumpp);
 use Data::Format::Pretty::Console qw(format_pretty);
 use YAML::Any;
@@ -72,7 +72,13 @@ my @data = (
     },
 
     {
-        data         => {a=>{}},
+        data         => {a=>{k=>"v"}, b=>{k=>"v"}},
+        struct       => "hot",
+        output_re    => qr/^a:\n.+---.+/,
+    },
+
+    {
+        data         => {a=>{b=>{}}},
         struct       => undef,
         is_yaml      => 1,
     },

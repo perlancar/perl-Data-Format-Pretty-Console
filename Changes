@@ -1,5 +1,10 @@
 Revision history for Data-Format-Pretty-Console
 
+0.03     2010-12-24
+
+         Pretty print hash of hashes.
+
+
 0.02     2010-11-20
 
          In displaying list/hash, list elements/hash values are now "cells"
