@@ -22,6 +22,7 @@ my @data = (
     {
         data         => [],
         struct       => "aoa",
+        output       => "",
     },
 
     {

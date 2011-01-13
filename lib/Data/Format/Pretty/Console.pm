@@ -307,12 +307,16 @@ sub _format {
     } elsif ($struct eq 'aoa') {
 
         if ($is_interactive) {
-            my $t = Text::ASCIITable->new(); #{headingText => 'blah'}
-            $t->setCols(map { "column$_" } 0..@{ $data->[0] }-1);
-            for my $i (0..@$data-1) {
-                $t->addRow(map {format_cell($_)} @{ $data->[$i] });
+            if (@$data) {
+                my $t = Text::ASCIITable->new(); #{headingText => 'blah'}
+                $t->setCols(map { "column$_" } 0..@{ $data->[0] }-1);
+                for my $i (0..@$data-1) {
+                    $t->addRow(map {format_cell($_)} @{ $data->[$i] });
+                }
+                return "$t"; # stringify
+            } else {
+                return "";
             }
-            return "$t"; # stringify
         } else {
             # tab-separated
             my @t;
