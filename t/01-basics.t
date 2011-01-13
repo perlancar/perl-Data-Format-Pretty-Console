@@ -1,7 +1,7 @@
 #!perl -Tw
 
 use strict;
-use Test::More tests => 24;
+use Test::More tests => 25;
 use Data::Dump::Partial qw(dumpp);
 use Data::Format::Pretty::Console qw(format_pretty);
 use YAML::Any;
