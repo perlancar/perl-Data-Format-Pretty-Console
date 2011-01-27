@@ -119,8 +119,7 @@ sub test_dnf {
             exists($spec->{is_yaml})) {
         my $output;
         {
-            local $Data::Format::Pretty::Console::Interactive = 1;
-            $output = format_pretty($data);
+            $output = format_pretty($data, {interactive=>1});
         }
         if (exists($spec->{output})) {
             is($output, $spec->{output}, "$test_name: output exact match");
