@@ -116,6 +116,7 @@ use 5.010;
 use strict;
 use warnings;
 
+use Scalar::Util qw(blessed);
 use Text::ASCIITable;
 use YAML::Any;
 
@@ -147,20 +148,21 @@ sub format_pretty {
 }
 
 # return a string when data can be represented as a cell, otherwise undef. what
-# can be put in a table cell? a string or array of strings that is quite "short".
+# can be put in a table cell? a string (or stringified object) or array of
+# strings (stringified objects) that is quite "short".
 sub format_cell {
     my ($data) = @_;
 
     # XXX currently hardcoded limits
     my $maxlen = 1000;
 
-    if (!ref($data)) {
+    if (!ref($data) || blessed($data)) {
         return "" if !defined($data);
         return if length($data) > $maxlen;
-        return $data;
+        return "$data";
     } elsif (ref($data) eq 'ARRAY') {
-        return if grep {ref($_)} @$data;
-        my $s = join(", ", map {$_//""} @$data);
+        return if grep {ref($_) && !blessed($_)} @$data;
+        my $s = join(", ", map {defined($_) ? "$_":""} @$data);
         return if length($s)   > $maxlen;
         return $s;
     } else {
@@ -181,7 +183,7 @@ sub detect_struct {
     {
       CHECK_SCALAR:
         {
-            if (!ref($data)) {
+            if (!ref($data) || blessed($data)) {
                 $struct = "scalar";
                 last CHECK_FORMAT;
             }
@@ -275,7 +277,7 @@ sub _format {
 
     } elsif ($struct eq 'scalar') {
 
-        return ($data // "") . "\n";
+        return (defined($data) ? "$data" : "") . "\n";
 
     } elsif ($struct eq 'list') {
 

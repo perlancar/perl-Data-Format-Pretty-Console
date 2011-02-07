@@ -1,7 +1,7 @@
 #!perl -Tw
 
 use strict;
-use Test::More tests => 25;
+use Test::More tests => 27;
 use Data::Dump::Partial qw(dumpp);
 use Data::Format::Pretty::Console qw(format_pretty);
 use YAML::Any;
@@ -17,6 +17,12 @@ my @data = (
         data         => "foo",
         struct       => "scalar",
         output       => "foo\n",
+    },
+
+    {
+        data         => bless([], "foo"),
+        struct       => "scalar",
+        output_re    => qr/foo=/,
     },
 
     {
