@@ -1,5 +1,10 @@
 Revision history for Data-Format-Pretty-Console
 
+0.06     2011-02-06
+
+         Stringify objects (suggested by JOHANL) [resolved rt#65357].
+
+
 0.05     2011-01-28
 
          Add option: interactive
