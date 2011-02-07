@@ -146,8 +146,7 @@ sub test_dnf {
             exists($spec->{is_yaml})) {
         my $output;
         {
-            local $Data::Format::Pretty::Console::Interactive = 0;
-            $output = format_pretty($data);
+            $output = format_pretty($data, {interactive=>0});
         }
         if (exists($spec->{output_ni})) {
             is($output, $spec->{output_ni},
