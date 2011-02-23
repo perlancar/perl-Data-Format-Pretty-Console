@@ -279,7 +279,8 @@ sub _format {
 
     } elsif ($struct eq 'scalar') {
 
-        return (defined($data) ? "$data" : "") . "\n";
+        my $sdata = defined($data) ? "$data" : "";
+        return $sdata =~ /\n\z/s ? $sdata : "$sdata\n";
 
     } elsif ($struct eq 'list') {
 

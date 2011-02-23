@@ -1,7 +1,7 @@
 #!perl -Tw
 
 use strict;
-use Test::More tests => 27;
+use Test::More;
 use Data::Dump::Partial qw(dumpp);
 use Data::Format::Pretty::Console qw(format_pretty);
 use YAML::Any;
@@ -15,6 +15,18 @@ my @data = (
 
     {
         data         => "foo",
+        struct       => "scalar",
+        output       => "foo\n",
+    },
+
+    # test extra newline not being printed when scalar already ends with newline
+    {
+        data         => "\n",
+        struct       => "scalar",
+        output       => "\n",
+    },
+    {
+        data         => "foo\n",
         struct       => "scalar",
         output       => "foo\n",
     },
@@ -167,3 +179,4 @@ sub test_dnf {
 }
 
 test_dnf($_) for @data;
+done_testing();
