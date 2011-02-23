@@ -1,5 +1,11 @@
 Revision history for Data-Format-Pretty-Console
 
+0.07     2011-02-23
+
+         Scalar formatting: don't add newline when scalar already ends with
+         newline.
+
+
 0.06     2011-02-06
 
          Stringify objects (suggested by JOHANL) [resolved rt#65357].
