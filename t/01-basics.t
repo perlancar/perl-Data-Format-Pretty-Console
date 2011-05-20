@@ -1,5 +1,4 @@
 #!perl -Tw
-
 use strict;
 use Test::More;
 use Data::Dump::Partial qw(dumpp);
@@ -107,6 +106,13 @@ my @data = (
         opts         => {table_column_orders=>[[qw/foo bar baz/]]},
         struct       => 'aoh',
         output_re    => qr/^\| a \| foo \| bar \| bat \| baz \| quux \|\n/m,
+    },
+    {
+        name         => 'opt table_column_orders (no order matches)',
+        data         => [{a=>1, bat=>1, foo=>1, bar=>1, baz=>1, quux=>1}],
+        opts         => {table_column_orders=>[[qw/foo bar baz qux/]]},
+        struct       => 'aoh',
+        output_re    => qr/^\| a \| bar \| bat \| baz \| foo \| quux \|\n/m,
     },
 
 );
