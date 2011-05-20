@@ -1,5 +1,12 @@
 Revision history for Data-Format-Pretty-Console
 
+0.08     2011-05-20
+
+         [ENHANCEMENTS]
+
+         - Add option: table_column_orders.
+
+
 0.07     2011-02-23
 
          Scalar formatting: don't add newline when scalar already ends with
