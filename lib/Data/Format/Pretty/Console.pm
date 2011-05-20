@@ -34,7 +34,7 @@ false):
  baz
  qux
 
-Hash, format_pretty({foo=>"data", bar=>"format", baz=>"pretty", qux=>"console"}):
+Hash, format_pretty({foo=>"data",bar=>"format",baz=>"pretty",qux=>"console"}):
 
  .---------------.
  | key | value   |
