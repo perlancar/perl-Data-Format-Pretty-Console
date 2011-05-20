@@ -107,8 +107,8 @@ This module takes piping into consideration, and will output a simpler, more
 suitable format when your user pipes your program's output into some other
 program.
 
-Most of the time, you don't have to configure anything. But in the future some
-formatting settings will be tweakable.
+Most of the time, you don't have to configure anything, but some options are
+provided to tweak the output.
 
 =cut
 
@@ -116,6 +116,7 @@ use 5.010;
 use strict;
 use warnings;
 
+use Log::Any '$log';
 use Scalar::Util qw(blessed);
 use Text::ASCIITable;
 use YAML::Any;
@@ -138,6 +139,23 @@ Return formatted data structure. Options:
 If set, will override interactive terminal detection (-t STDOUT). Simpler
 formatting will be done if terminal is non-interactive (e.g. when output is
 piped). Using this option will force simpler/full formatting.
+
+=item * table_column_orders => [[colname, colname], ...]
+
+Specify column orders when drawing a table. If a table has all the columns, then
+the column names will be ordered according to the specification. For example,
+when table_column_orders is [[qw/foo bar baz/]], this table's columns will not
+be reordered because it doesn't have all the mentioned columns:
+
+ |foo|quux|
+
+But this table will:
+
+ |apple|bar|baz|foo|quux|
+
+into:
+
+ |apple|foo|bar|baz|quux|
 
 =back
 
@@ -341,7 +359,8 @@ sub _format {
 
     } elsif ($struct eq 'aoh') {
 
-        my @cols = sort keys %{$struct_meta->{columns}};
+        my @cols = @{ _order_table_columns(
+            [keys %{$struct_meta->{columns}}], $opts) };
         if ($is_interactive) {
             my $t = Text::ASCIITable->new(); #{headingText => 'blah'}
             $t->setCols(@cols);
@@ -373,6 +392,47 @@ sub _format {
         die "BUG: Unknown format `$struct`";
 
     }
+}
+
+sub _order_table_columns {
+    #$log->tracef('=> _order_table_columns(%s)', \@_);
+    my ($cols, $opts) = @_;
+
+    my $found; # whether we found an ordering in table_column_orders
+    my $tco = $opts->{table_column_orders};
+    my %orders; # colname => idx
+    if ($tco) {
+        die "table_column_orders should be an arrayref"
+            unless ref($tco) eq 'ARRAY';
+      CO:
+        for my $co (@$tco) {
+            die "table_column_orders elements must all be arrayrefs"
+                unless ref($co) eq 'ARRAY';
+            for (@$co) {
+                next CO unless $_ ~~ @$cols;
+            }
+
+            $found++;
+            for (my $i=0; $i<@$co; $i++) {
+                $orders{$co->[$i]} = $i;
+            }
+            $found++;
+            last CO;
+        }
+    }
+
+    my @ocols;
+    if ($found) {
+        @ocols = sort {
+            (defined($orders{$a}) && defined($orders{$b}) ?
+                 $orders{$a} <=> $orders{$b} : 0)
+                || $a cmp $b
+        } @$cols;
+    } else {
+        @ocols = sort @$cols;
+    }
+
+    \@ocols;
 }
 
 =head1 SEE ALSO
