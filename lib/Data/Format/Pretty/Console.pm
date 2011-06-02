@@ -130,7 +130,7 @@ our @EXPORT_OK = qw(format_pretty);
 
 =for Pod::Coverage (format_cell|is_cell|detect_struct)
 
-=head2 format_pretty($data, %opts)
+=head2 format_pretty($data, \%opts)
 
 Return formatted data structure. Options:
 
