@@ -123,6 +123,7 @@ use Scalar::Util qw(blessed);
 use Text::ASCIITable;
 use YAML::Any;
 
+require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(format_pretty);
 
