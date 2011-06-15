@@ -141,12 +141,12 @@ sub test_dnf {
         ($struct // "unknown") . ": " . dumpp($data);
 
     if (exists $spec->{struct}) {
-        my ($s, $sm) =
-            Data::Format::Pretty::Console::detect_struct($data);
+        my $fmt = Data::Format::Pretty::Console->new;
+        my ($s, $sm) = $fmt->_detect_struct($data);
         if (!$struct) {
-            ok(!$s, "$test_name: detect_struct: structure unknown");
+            ok(!$s, "$test_name: _detect_struct: structure unknown");
         } else {
-            is($s, $struct, "$test_name: detect_struct: structure is ".
+            is($s, $struct, "$test_name: _detect_struct: structure is ".
                    "'$struct'");
         }
     }

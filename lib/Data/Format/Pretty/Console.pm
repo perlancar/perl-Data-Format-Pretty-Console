@@ -128,8 +128,6 @@ our @EXPORT_OK = qw(format_pretty);
 
 =head1 FUNCTIONS
 
-=for Pod::Coverage (format_cell|is_cell|detect_struct)
-
 =head2 format_pretty($data, \%opts)
 
 Return formatted data structure. Options:
@@ -166,37 +164,61 @@ into:
 sub format_pretty {
     my ($data, $opts) = @_;
     $opts //= {};
-    _format($data, $opts);
+    __PACKAGE__->new($opts)->_format($data);
 }
 
-# return a string when data can be represented as a cell, otherwise undef. what
-# can be put in a table cell? a string (or stringified object) or array of
-# strings (stringified objects) that is quite "short".
-sub format_cell {
-    my ($data) = @_;
+=for Pod::Coverage new
+
+=cut
+
+# OO interface is hidden, we use it just to subclass Data::Format::Pretty::HTML
+sub new {
+    my ($class, $opts) = @_;
+    $opts //= {};
+    $opts->{interactive} //= (-t STDOUT);
+    bless {opts=>$opts}, $class;
+}
+
+sub _is_cell_or_format_cell {
+    my ($self, $data, $is_format) = @_;
 
     # XXX currently hardcoded limits
     my $maxlen = 1000;
 
     if (!ref($data) || blessed($data)) {
-        return "" if !defined($data);
-        return if length($data) > $maxlen;
-        return "$data";
+        if (!defined($data)) {
+            return "" if $is_format;
+            return 1;
+        }
+        if (length($data) > $maxlen) {
+            return;
+        }
+        return "$data" if $is_format;
+        return 1;
     } elsif (ref($data) eq 'ARRAY') {
-        return if grep {ref($_) && !blessed($_)} @$data;
+        if (grep {ref($_) && !blessed($_)} @$data) {
+            return;
+        }
         my $s = join(", ", map {defined($_) ? "$_":""} @$data);
-        return if length($s)   > $maxlen;
-        return $s;
+        if (length($s) > $maxlen) {
+            return;
+        }
+        return $s if $is_format;
+        return 1;
     } else {
         return;
     }
 }
 
-sub is_cell { defined(format_cell($_[0])) }
+# return a string when data can be represented as a cell, otherwise undef. what
+# can be put in a table cell? a string (or stringified object) or array of
+# strings (stringified objects) that is quite "short".
+sub _format_cell { _is_cell_or_format_cell(@_, 1) }
 
-sub detect_struct {
-    my ($data, $opts) = @_;
-    $opts //= {};
+sub _is_cell     { _is_cell_or_format_cell(@_, 0) }
+
+sub _detect_struct {
+    my ($self, $data) = @_;
     my $struct;
     my $struct_meta = {};
 
@@ -218,7 +240,7 @@ sub detect_struct {
                 for my $row (@$data) {
                     last CHECK_AOA unless ref($row) eq 'ARRAY';
                     last CHECK_AOA if defined($numcols) && $numcols != @$row;
-                    last CHECK_AOA if grep { !is_cell($_) } @$row;
+                    last CHECK_AOA if grep { !$self->_is_cell($_) } @$row;
                     $numcols = @$row;
                 }
                 $struct = "aoa";
@@ -233,7 +255,7 @@ sub detect_struct {
                 for my $row (@$data) {
                     last CHECK_AOH unless ref($row) eq 'HASH';
                     for my $k (keys %$row) {
-                        last CHECK_AOH if !is_cell($row->{$k});
+                        last CHECK_AOH if !$self->_is_cell($row->{$k});
                         $struct_meta->{columns}{$k} = 1;
                     }
                 }
@@ -247,7 +269,7 @@ sub detect_struct {
         {
             if (ref($data) eq 'ARRAY') {
                 for (@$data) {
-                    last CHECK_LIST unless is_cell($_);
+                    last CHECK_LIST unless $self->_is_cell($_);
                 }
                 $struct = "list";
                 last CHECK_FORMAT;
@@ -257,11 +279,11 @@ sub detect_struct {
         # hash which contains at least one "table" (list/aoa/aoh)
       CHECK_HOT:
         {
-            last CHECK_HOT if $opts->{skip_hot};
+            last CHECK_HOT if $self->{opts}{skip_hot};
             last CHECK_HOT unless ref($data) eq 'HASH';
             my $has_t;
             while (my ($k, $v) = each %$data) {
-                my ($s2, $sm2) = detect_struct($v, {skip_hot=>1});
+                my ($s2, $sm2) = $self->_detect_struct($v, {skip_hot=>1});
                 last CHECK_HOT unless $s2;
                 $has_t = 1 if $s2 =~ /^(?:list|aoa|aoh|hash)$/;
             }
@@ -275,7 +297,7 @@ sub detect_struct {
         {
             if (ref($data) eq 'HASH') {
                 for (values %$data) {
-                    last CHECK_HASH unless is_cell($_);
+                    last CHECK_HASH unless $self->_is_cell($_);
                 }
                 $struct = "hash";
                 last CHECK_FORMAT;
@@ -287,121 +309,157 @@ sub detect_struct {
     ($struct, $struct_meta);
 }
 
-sub _format {
-    my ($data, $opts) = @_;
+sub _render_table {
+    my ($self, $t) = @_;
+    "$t";
+}
 
-    my ($struct, $struct_meta) = detect_struct($data);
-    my $is_interactive = $opts->{interactive} // (-t STDOUT);
+# format unknown structure, the default is to dump YAML structure
+sub _format_unknown {
+    my ($self, $data) = @_;
+    Dump($data);
+}
 
-    if (!$struct) {
+sub _format_scalar {
+    my ($self, $data) = @_;
 
-        return Dump($data);
+    my $sdata = defined($data) ? "$data" : "";
+    return $sdata =~ /\n\z/s ? $sdata : "$sdata\n";
+}
 
-    } elsif ($struct eq 'scalar') {
-
-        my $sdata = defined($data) ? "$data" : "";
-        return $sdata =~ /\n\z/s ? $sdata : "$sdata\n";
-
-    } elsif ($struct eq 'list') {
-
-        if ($is_interactive) {
-            my $t = Text::ASCIITable->new(); #{headingText => 'blah'}
-            $t->setCols("data");
-            for my $i (0..@$data-1) {
-                $t->addRow(format_cell($data->[$i]));
-            }
-            return "$t"; # stringify
-        } else {
-            my @rows;
-            for my $row (@$data) {
-                push @rows, ($row // "") . "\n";
-            }
-            return join("", @rows);
+sub _format_list {
+    my ($self, $data) = @_;
+    # format list as as one-column table, elements as rows
+    if ($self->{opts}{interactive}) {
+        my $t = Text::ASCIITable->new(); #{headingText => 'blah'}
+        $t->setCols("data");
+        for my $i (0..@$data-1) {
+            $t->addRow($self->_format_cell($data->[$i]));
         }
-
-    } elsif ($struct eq 'hash') {
-
-        if ($is_interactive) {
-            # show hash as two-column table
-            my $t = Text::ASCIITable->new(); #{headingText => 'blah'}
-            $t->setCols("key", "value");
-            for my $k (sort keys %$data) {
-                $t->addRow($k, format_cell($data->{$k}));
-            }
-            return "$t"; # stringify
-        } else {
-            my @t;
-            for my $k (sort keys %$data) {
-                push @t, $k, "\t", ($data->{$k} // ""), "\n";
-            }
-            return join("", @t);
+        return $self->_render_table($t);
+    } else {
+        my @rows;
+        for my $row (@$data) {
+            push @rows, ($row // "") . "\n";
         }
+        return join("", @rows);
+    }
+}
 
-    } elsif ($struct eq 'aoa') {
-
-        if ($is_interactive) {
-            if (@$data) {
-                my $t = Text::ASCIITable->new(); #{headingText => 'blah'}
-                $t->setCols(map { "column$_" } 0..@{ $data->[0] }-1);
-                for my $i (0..@$data-1) {
-                    $t->addRow(map {format_cell($_)} @{ $data->[$i] });
-                }
-                return "$t"; # stringify
-            } else {
-                return "";
-            }
-        } else {
-            # tab-separated
-            my @t;
-            for my $row (@$data) {
-                push @t, join("\t", map { format_cell($_) } @$row) . "\n";
-            }
-            return join("", @t);
+sub _format_hash {
+    my ($self, $data) = @_;
+    # format hash as two-column table
+    if ($self->{opts}{interactive}) {
+        my $t = Text::ASCIITable->new(); #{headingText => 'blah'}
+        $t->setCols("key", "value");
+        for my $k (sort keys %$data) {
+            $t->addRow($k, $self->_format_cell($data->{$k}));
         }
-
-    } elsif ($struct eq 'aoh') {
-
-        my @cols = @{ _order_table_columns(
-            [keys %{$struct_meta->{columns}}], $opts) };
-        if ($is_interactive) {
-            my $t = Text::ASCIITable->new(); #{headingText => 'blah'}
-            $t->setCols(@cols);
-            for my $i (0..@$data-1) {
-                my $row = $data->[$i];
-                $t->addRow(map {format_cell($row->{$_})} @cols);
-            }
-            return "$t"; # stringify
-        } else {
-            # tab-separated
-            my @t;
-            for my $row (@$data) {
-                my @row = map {format_cell($row->{$_})} @cols;
-                push @t, join("\t", @row) . "\n";
-            }
-            return join("", @t);
-        }
-
-    } elsif ($struct eq 'hot') {
-
+        return $self->_render_table($t);
+    } else {
         my @t;
         for my $k (sort keys %$data) {
-            push @t, "$k:\n", _format($data->{$k}, $opts), "\n";
+            push @t, $k, "\t", ($data->{$k} // ""), "\n";
         }
         return join("", @t);
+    }
+}
 
+sub _format_aoa {
+    my ($self, $data) = @_;
+    # show aoa as table
+    if ($self->{opts}{interactive}) {
+        if (@$data) {
+            my $t = Text::ASCIITable->new(); #{headingText => 'blah'}
+            $t->setCols(map { "column$_" } 0..@{ $data->[0] }-1);
+            for my $i (0..@$data-1) {
+                $t->addRow(map {$self->_format_cell($_)} @{ $data->[$i] });
+            }
+            return $self->_render_table($t);
+        } else {
+            return "";
+        }
     } else {
+        # tab-separated
+        my @t;
+        for my $row (@$data) {
+            push @t, join("\t", map { $self->_format_cell($_) } @$row) .
+                "\n";
+        }
+        return join("", @t);
+    }
+}
 
+sub _format_aoh {
+    my ($self, $data, $struct_meta) = @_;
+    # show aoh as table
+    my @cols = @{ $self->_order_table_columns(
+        [keys %{$struct_meta->{columns}}]) };
+    if ($self->{opts}{interactive}) {
+        my $t = Text::ASCIITable->new(); #{headingText => 'blah'}
+        $t->setCols(@cols);
+        for my $i (0..@$data-1) {
+            my $row = $data->[$i];
+            $t->addRow(map {$self->_format_cell($row->{$_})} @cols);
+        }
+        return $self->_render_table($t);
+    } else {
+        # tab-separated
+        my @t;
+        for my $row (@$data) {
+            my @row = map {$self->_format_cell($row->{$_})} @cols;
+            push @t, join("\t", @row) . "\n";
+        }
+        return join("", @t);
+    }
+}
+
+sub _format_hot {
+    my ($self, $data) = @_;
+    # show hot as paragraphs:
+    #
+    # key:
+    # value (table)
+    #
+    # key2:
+    # value ...
+    my @t;
+    for my $k (sort keys %$data) {
+        push @t, "$k:\n", $self->_format($data->{$k}), "\n";
+    }
+    return join("", @t);
+}
+
+sub _format {
+    my ($self, $data) = @_;
+
+    my ($struct, $struct_meta) = $self->_detect_struct($data);
+
+    if (!$struct) {
+        return $self->_format_unknown($data, $struct_meta);
+    } elsif ($struct eq 'scalar') {
+        return $self->_format_scalar($data, $struct_meta);
+    } elsif ($struct eq 'list') {
+        return $self->_format_list($data, $struct_meta);
+    } elsif ($struct eq 'hash') {
+        return $self->_format_hash($data, $struct_meta);
+    } elsif ($struct eq 'aoa') {
+        return $self->_format_aoa($data, $struct_meta);
+    } elsif ($struct eq 'aoh') {
+        return $self->_format_aoh($data, $struct_meta);
+    } elsif ($struct eq 'hot') {
+        return $self->_format_hot($data, $struct_meta);
+    } else {
         die "BUG: Unknown format `$struct`";
-
     }
 }
 
 sub _order_table_columns {
     #$log->tracef('=> _order_table_columns(%s)', \@_);
-    my ($cols, $opts) = @_;
+    my ($self, $cols) = @_;
 
     my $found; # whether we found an ordering in table_column_orders
-    my $tco = $opts->{table_column_orders};
+    my $tco = $self->{opts}{table_column_orders};
     my %orders; # colname => idx
     if ($tco) {
         die "table_column_orders should be an arrayref"
@@ -436,6 +494,7 @@ sub _order_table_columns {
 
     \@ocols;
 }
+
 
 =head1 SEE ALSO
 
