@@ -1,5 +1,11 @@
 Revision history for Data-Format-Pretty-Console
 
+0.09     2011-06-15
+
+         No functional changes. Internally restructured as OO to allow being
+         subclassed by Data::Format::Pretty::HTML.
+
+
 0.08     2011-05-20
 
          [ENHANCEMENTS]
