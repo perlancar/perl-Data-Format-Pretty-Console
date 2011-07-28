@@ -1,5 +1,16 @@
 Revision history for Data-Format-Pretty-Console
 
+0.10     2011-07-28
+
+         [INCOMPATIBLE CHANGES]
+
+         - In interactive (table) mode, no longer prints header row for array,
+           hash, and aoa data (they are quite meaningless anyway, respectively:
+           "data", "key, value", and "col0, col1, ..."). No changes in
+           non-interactive (tab-separated text) mode, since headers are never
+           printed.
+
+
 0.09     2011-06-15
 
          No functional changes. Internally restructured as OO to allow being
