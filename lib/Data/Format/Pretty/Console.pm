@@ -17,8 +17,6 @@ Scalar, format_pretty("foo"):
 
 List, format_pretty([qw/foo bar baz qux/]):
 
- .------.
- | data |
  +------+
  | foo  |
  | bar  |
@@ -36,8 +34,6 @@ false):
 
 Hash, format_pretty({foo=>"data",bar=>"format",baz=>"pretty",qux=>"console"}):
 
- .---------------.
- | key | value   |
  +-----+---------+
  | bar | format  |
  | baz | pretty  |
@@ -48,8 +44,6 @@ Hash, format_pretty({foo=>"data",bar=>"format",baz=>"pretty",qux=>"console"}):
 2-dimensional array, format_pretty([ [1, 2, ""], [28, "bar", 3], ["foo", 3,
 undef] ]):
 
- .-----------------------------.
- | column0 | column1 | column2 |
  +---------+---------+---------+
  |       1 |       2 |         |
  |      28 | bar     |       3 |
@@ -337,6 +331,7 @@ sub _format_list {
         for my $i (0..@$data-1) {
             $t->addRow($self->_format_cell($data->[$i]));
         }
+        $t->setOptions({hide_HeadRow=>1, hide_HeadLine=>1});
         return $self->_render_table($t);
     } else {
         my @rows;
@@ -356,6 +351,7 @@ sub _format_hash {
         for my $k (sort keys %$data) {
             $t->addRow($k, $self->_format_cell($data->{$k}));
         }
+        $t->setOptions({hide_HeadRow=>1, hide_HeadLine=>1});
         return $self->_render_table($t);
     } else {
         my @t;
@@ -376,6 +372,7 @@ sub _format_aoa {
             for my $i (0..@$data-1) {
                 $t->addRow(map {$self->_format_cell($_)} @{ $data->[$i] });
             }
+            $t->setOptions({hide_HeadRow=>1, hide_HeadLine=>1});
             return $self->_render_table($t);
         } else {
             return "";
