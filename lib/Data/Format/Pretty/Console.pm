@@ -1,112 +1,4 @@
 package Data::Format::Pretty::Console;
-# ABSTRACT: Pretty-print data structure for console output
-
-=head1 SYNOPSIS
-
-In your program:
-
- use Data::Format::Pretty::Console qw(format_pretty);
- ...
- print format_pretty($result);
-
-Some example output:
-
-Scalar, format_pretty("foo"):
-
- foo
-
-List, format_pretty([qw/foo bar baz qux/]):
-
- +------+
- | foo  |
- | bar  |
- | baz  |
- | qux  |
- '------'
-
-The same list, when program output is being piped (that is, (-t STDOUT) is
-false):
-
- foo
- bar
- baz
- qux
-
-Hash, format_pretty({foo=>"data",bar=>"format",baz=>"pretty",qux=>"console"}):
-
- +-----+---------+
- | bar | format  |
- | baz | pretty  |
- | foo | data    |
- | qux | console |
- '-----+---------'
-
-2-dimensional array, format_pretty([ [1, 2, ""], [28, "bar", 3], ["foo", 3,
-undef] ]):
-
- +---------+---------+---------+
- |       1 |       2 |         |
- |      28 | bar     |       3 |
- | foo     |       3 |         |
- '---------+---------+---------'
-
-An array of hashrefs, such as commonly found if you use DBI's fetchrow_hashref()
-and friends, format_pretty([ {a=>1, b=>2}, {b=>2, c=>3}, {c=>4} ]):
-
- .-----------.
- | a | b | c |
- +---+---+---+
- | 1 | 2 |   |
- |   | 2 | 3 |
- |   |   | 4 |
- '---+---+---'
-
-Some more complex data, format_pretty({summary => "Blah...", users =>
-[{name=>"budi", domains=>["foo.com", "bar.com"], quota=>"1000"}, {name=>"arif",
-domains=>["baz.com"], quota=>"2000"}], verified => 0}):
-
- summary:
- Blah...
-
- users:
- .---------------------------------.
- | domains          | name | quota |
- +------------------+------+-------+
- | foo.com, bar.com | budi |  1000 |
- | baz.com          | arif |  2000 |
- '------------------+------+-------'
-
- verified:
- 0
-
-Structures which can't be handled yet will simply be output as YAML,
-format_pretty({a {b=>1}}):
-
- ---
- a:
-   b: 1
-
-
-=head1 DESCRIPTION
-
-This module is meant to output data structure in a "pretty" or "nice" format,
-suitable for console programs. The idea of this module is that for you to just
-merrily dump data structure to the console, and this module will figure out how
-to best display your data to the end-user.
-
-Currently this module tries to display the data mostly as a nice ASCII table (or
-a series of ASCII tables), and failing that, display it as YAML.
-
-This module takes piping into consideration, and will output a simpler, more
-suitable format when your user pipes your program's output into some other
-program.
-
-Most of the time, you don't have to configure anything, but some options are
-provided to tweak the output.
-
-This module uses L<Log::Any> for logging.
-
-=cut
 
 use 5.010;
 use strict;
@@ -121,40 +13,7 @@ require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(format_pretty);
 
-=head1 FUNCTIONS
-
-=head2 format_pretty($data, \%opts)
-
-Return formatted data structure. Options:
-
-=over 4
-
-=item * interactive => BOOL (optional, default undef)
-
-If set, will override interactive terminal detection (-t STDOUT). Simpler
-formatting will be done if terminal is non-interactive (e.g. when output is
-piped). Using this option will force simpler/full formatting.
-
-=item * table_column_orders => [[colname, colname], ...]
-
-Specify column orders when drawing a table. If a table has all the columns, then
-the column names will be ordered according to the specification. For example,
-when table_column_orders is [[qw/foo bar baz/]], this table's columns will not
-be reordered because it doesn't have all the mentioned columns:
-
- |foo|quux|
-
-But this table will:
-
- |apple|bar|baz|foo|quux|
-
-into:
-
- |apple|foo|bar|baz|quux|
-
-=back
-
-=cut
+# VERSION
 
 sub format_pretty {
     my ($data, $opts) = @_;
@@ -162,11 +21,8 @@ sub format_pretty {
     __PACKAGE__->new($opts)->_format($data);
 }
 
-=for Pod::Coverage new
-
-=cut
-
-# OO interface is hidden, we use it just to subclass Data::Format::Pretty::HTML
+# OO interface is nto documented, we use it just to subclass
+# Data::Format::Pretty::HTML
 sub new {
     my ($class, $opts) = @_;
     $opts //= {};
@@ -493,11 +349,154 @@ sub _order_table_columns {
     \@ocols;
 }
 
+1;
+# ABSTRACT: Pretty-print data structure for console output
+__END__
+
+=head1 SYNOPSIS
+
+In your program:
+
+ use Data::Format::Pretty::Console qw(format_pretty);
+ ...
+ print format_pretty($result);
+
+Some example output:
+
+Scalar, format_pretty("foo"):
+
+ foo
+
+List, format_pretty([qw/foo bar baz qux/]):
+
+ +------+
+ | foo  |
+ | bar  |
+ | baz  |
+ | qux  |
+ '------'
+
+The same list, when program output is being piped (that is, (-t STDOUT) is
+false):
+
+ foo
+ bar
+ baz
+ qux
+
+Hash, format_pretty({foo=>"data",bar=>"format",baz=>"pretty",qux=>"console"}):
+
+ +-----+---------+
+ | bar | format  |
+ | baz | pretty  |
+ | foo | data    |
+ | qux | console |
+ '-----+---------'
+
+2-dimensional array, format_pretty([ [1, 2, ""], [28, "bar", 3], ["foo", 3,
+undef] ]):
+
+ +---------+---------+---------+
+ |       1 |       2 |         |
+ |      28 | bar     |       3 |
+ | foo     |       3 |         |
+ '---------+---------+---------'
+
+An array of hashrefs, such as commonly found if you use DBI's fetchrow_hashref()
+and friends, format_pretty([ {a=>1, b=>2}, {b=>2, c=>3}, {c=>4} ]):
+
+ .-----------.
+ | a | b | c |
+ +---+---+---+
+ | 1 | 2 |   |
+ |   | 2 | 3 |
+ |   |   | 4 |
+ '---+---+---'
+
+Some more complex data, format_pretty({summary => "Blah...", users =>
+[{name=>"budi", domains=>["foo.com", "bar.com"], quota=>"1000"}, {name=>"arif",
+domains=>["baz.com"], quota=>"2000"}], verified => 0}):
+
+ summary:
+ Blah...
+
+ users:
+ .---------------------------------.
+ | domains          | name | quota |
+ +------------------+------+-------+
+ | foo.com, bar.com | budi |  1000 |
+ | baz.com          | arif |  2000 |
+ '------------------+------+-------'
+
+ verified:
+ 0
+
+Structures which can't be handled yet will simply be output as YAML,
+format_pretty({a {b=>1}}):
+
+ ---
+ a:
+   b: 1
+
+
+=head1 DESCRIPTION
+
+This module is meant to output data structure in a "pretty" or "nice" format,
+suitable for console programs. The idea of this module is that for you to just
+merrily dump data structure to the console, and this module will figure out how
+to best display your data to the end-user.
+
+Currently this module tries to display the data mostly as a nice ASCII table (or
+a series of ASCII tables), and failing that, display it as YAML.
+
+This module takes piping into consideration, and will output a simpler, more
+suitable format when your user pipes your program's output into some other
+program.
+
+Most of the time, you don't have to configure anything, but some options are
+provided to tweak the output.
+
+This module uses L<Log::Any> for logging.
+
+
+=head1 FUNCTIONS
+
+=for Pod::Coverage new
+
+=head2 format_pretty($data, \%opts)
+
+Return formatted data structure. Options:
+
+=over 4
+
+=item * interactive => BOOL (optional, default undef)
+
+If set, will override interactive terminal detection (-t STDOUT). Simpler
+formatting will be done if terminal is non-interactive (e.g. when output is
+piped). Using this option will force simpler/full formatting.
+
+=item * table_column_orders => [[colname, colname], ...]
+
+Specify column orders when drawing a table. If a table has all the columns, then
+the column names will be ordered according to the specification. For example,
+when table_column_orders is [[qw/foo bar baz/]], this table's columns will not
+be reordered because it doesn't have all the mentioned columns:
+
+ |foo|quux|
+
+But this table will:
+
+ |apple|bar|baz|foo|quux|
+
+into:
+
+ |apple|foo|bar|baz|quux|
+
+=back
+
 
 =head1 SEE ALSO
 
 Modules used for formatting: L<Text::ASCIITable>, L<YAML>.
 
 =cut
-
-1;
