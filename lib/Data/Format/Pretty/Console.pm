@@ -499,4 +499,6 @@ into:
 
 Modules used for formatting: L<Text::ASCIITable>, L<YAML>.
 
+L<Data::Format::Pretty>
+
 =cut
