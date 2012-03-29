@@ -15,6 +15,8 @@ our @EXPORT_OK = qw(format_pretty);
 
 # VERSION
 
+sub content_type { "text/plain" }
+
 sub format_pretty {
     my ($data, $opts) = @_;
     $opts //= {};
