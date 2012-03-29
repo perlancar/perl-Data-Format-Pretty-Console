@@ -1,5 +1,10 @@
 Revision history for Data-Format-Pretty-Console
 
+0.12     2012-03-29
+
+         Add content_type().
+
+
 0.11     2011-08-11
 
          No functional changes. Added Data::Format::Pretty::Text which is a
