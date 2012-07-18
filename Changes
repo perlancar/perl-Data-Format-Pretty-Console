@@ -1,5 +1,11 @@
 Revision history for Data-Format-Pretty-Console
 
+0.14     2012-07-18 (SHARYANTO)
+
+         No functional changes. Oops, environments FORMAT_PRETTY_TABLE_COLUMN_*
+         didn't work before.
+
+
 0.13     2012-07-18 (SHARYANTO)
 
          - Add option 'table_column_formats' to format column values with
