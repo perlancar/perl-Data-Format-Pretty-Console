@@ -5,6 +5,7 @@ use strict;
 use warnings;
 
 use Log::Any '$log';
+use Parse::VarName qw(split_varname_words);
 use Scalar::Util qw(blessed);
 use Text::ASCIITable;
 use YAML::Any;
@@ -222,7 +223,15 @@ sub _render_table {
     unless ($colfmts) {
         $colfmts = {};
         for (@{ $t->{tbl_cols} }) {
-            if (/(?:[^A-Za-z]|\A)(date|[mcau]?time)(?:[^A-Za-z]|\z)/) {
+            # fooTime or FOOtime should also be detected
+            my @words = map {lc} @{ split_varname_words(varname=>$_) };
+            if ("date" ~~ @words ||
+                    "time" ~~ @words ||
+                        "ctime" ~~ @words ||
+                            "mtime" ~~ @words ||
+                                "utime" ~~ @words ||
+                                    "stime" ~~ @words
+                                ) {
                 $colfmts->{$_} = 'date';
             }
         }

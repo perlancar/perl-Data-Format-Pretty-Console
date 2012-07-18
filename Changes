@@ -9,7 +9,9 @@ Revision history for Data-Format-Pretty-Console
 0.13     2012-07-18 (SHARYANTO)
 
          - Add option 'table_column_formats' to format column values with
-           Data::Unixish (dux) functions.
+           Data::Unixish (dux) functions. If not specified, some formatting
+           heuristics will be applied: columns with names like 'date1' or
+           'create_time' will be formatted as 'date'.
 
          - Add environment FORMAT_PRETTY_TABLE_COLUMN_ORDERS to set default
            'table_column_orders' option.

@@ -120,9 +120,9 @@ my @data = (
     },
     {
         name         => 'opt table_column_formats',
-        data         => [{date1=>942595047, _date=>1342595047}],
+        data         => [{fooDate=>942595047, _time1=>1342595047}],
         opts         => {table_column_formats=>[
-            {_date=>[[date=>{format=>"%Y"}]], date1=>"cat"}]},
+            {_date=>[[fooDate=>"cat", _time1=>{format=>"%Y"}]]}]},
         struct       => 'aoh',
         output_re    => qr/2012/m, # XXX and not /1999/
     },
