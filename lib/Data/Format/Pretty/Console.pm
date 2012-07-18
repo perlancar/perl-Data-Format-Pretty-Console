@@ -222,7 +222,7 @@ sub _render_table {
     unless ($colfmts) {
         $colfmts = {};
         for (@{ $t->{tbl_cols} }) {
-            if (/(?:[^A-Za-z]|\A)(date|time)(?:[^A-Za-z]|\z)/) {
+            if (/(?:[^A-Za-z]|\A)(date|[mcau]?time)(?:[^A-Za-z]|\z)/) {
                 $colfmts->{$_} = 'date';
             }
         }
