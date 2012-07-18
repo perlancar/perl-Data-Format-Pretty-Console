@@ -8,6 +8,9 @@ use Log::Any '$log';
 use Scalar::Util qw(blessed);
 use Text::ASCIITable;
 use YAML::Any;
+use JSON;
+
+my $json = JSON->new->allow_nonref;
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -29,6 +32,12 @@ sub new {
     my ($class, $opts) = @_;
     $opts //= {};
     $opts->{interactive} //= (-t STDOUT);
+    $opts->{table_column_orders} //= $json->decode_json(
+        $ENV{FORMAT_PRETTY_TABLE_COLUMN_ORDERS})
+        if defined($ENV{FORMAT_PRETTY_TABLE_COLUMN_ORDERS});
+    $opts->{table_column_formats} //= $json->decode_json(
+        $ENV{FORMAT_PRETTY_TABLE_COLUMN_FORMATS})
+        if defined($ENV{FORMAT_PRETTY_TABLE_COLUMN_FORMATS});
     bless {opts=>$opts}, $class;
 }
 
@@ -162,8 +171,65 @@ sub _detect_struct {
     ($struct, $struct_meta);
 }
 
+sub _format_table_columns {
+    require Data::Unixish::Apply;
+
+    my ($self, $t, $tcf) = @_;
+
+    my $num_rows = @{ $t->{tbl_rows} };
+    for my $col (keys %$tcf) {
+        my $fmt = $tcf->{$col};
+        my $i;
+        for (0..@{ $t->{tbl_cols} }-1) {
+            do { $i = $_; last } if $col eq $t->{tbl_cols}[$_];
+        }
+        next unless defined $i; # col not found in table
+        # extract column values from table
+        my @vals = map { $t->{tbl_rows}[$_][$i] } 0..$num_rows-1;
+        my $res = Data::Unixish::Apply::apply(in => \@vals, functions => $fmt);
+        unless ($res->[0] == 200) {
+            $log->warnf("Can't format column %s with %s, skipped", $col, $fmt);
+            next;
+        }
+        # inject back column values into table
+        @vals = @{ $res->[2] };
+        for (0..@vals-1) { $t->{tbl_rows}[$_][$i] = $vals[$_] }
+    }
+}
+
 sub _render_table {
     my ($self, $t) = @_;
+
+    my $colfmts;
+
+    # does table match this setting?
+    my $tcff = $self->{opts}{table_column_formats};
+    if ($tcff) {
+        for my $tcf (@$tcff) {
+            my $match = 1;
+            my @tcols = @{ $t->{tbl_cols} };
+            for my $scol (keys %$tcf) {
+                do { $match = 0; last } unless $scol ~~ @tcols;
+            }
+            if ($match) {
+                $colfmts = $tcf;
+                last;
+            }
+        }
+    }
+
+    # if not, pick some defaults (e.g. date)
+    unless ($colfmts) {
+        $colfmts = {};
+        for (@{ $t->{tbl_cols} }) {
+            if (/(?:[^A-Za-z]|\A)date(?:[^A-Za-z]|\z)/) {
+                $colfmts->{$_} = 'date';
+            }
+        }
+        $colfmts = undef unless keys %$colfmts;
+    }
+
+    $self->_format_table_columns($t, $colfmts) if $colfmts;
     "$t";
 }
 
@@ -477,7 +543,7 @@ If set, will override interactive terminal detection (-t STDOUT). Simpler
 formatting will be done if terminal is non-interactive (e.g. when output is
 piped). Using this option will force simpler/full formatting.
 
-=item * table_column_orders => [[colname, colname], ...]
+=item * table_column_orders => [[COLNAME1, COLNAME2], ...]
 
 Specify column orders when drawing a table. If a table has all the columns, then
 the column names will be ordered according to the specification. For example,
@@ -493,6 +559,32 @@ But this table will:
 into:
 
  |apple|foo|bar|baz|quux|
+
+=back
+
+=item * table_column_formats => [{COLNAME=>FMT, ...}, ...]
+
+Specify formats for columns. Each table format specification is a hashref
+{COLNAME=>FMT, COLNAME2=>FMT2, ...}. It will be applied to a table if the table
+has all the columns. FMT is a format specification according to
+L<Data::Unixish::Apply>, it's basically either a name of a dux function (e.g.
+'date') or an array of function name + arguments (e.g. ['date', [align =>
+{align=>'middle'}]].
+
+=back
+
+
+=head1 ENVIRONMENT
+
+=over 4
+
+=item * FORMAT_PRETTY_TABLE_COLUMN_FORMATS
+
+To set table_column_formats, interpreted as JSON.
+
+=item * FORMAT_PRETTY_TABLE_COLUMN_ORDERS
+
+To set table_column_orders, interpreted as JSON.
 
 =back
 

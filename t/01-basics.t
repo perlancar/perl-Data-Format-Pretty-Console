@@ -1,5 +1,9 @@
-#!perl -Tw
+#!perl
+
+use 5.010;
 use strict;
+use warnings;
+
 use Test::More;
 use Data::Dump::Partial qw(dumpp);
 use Data::Format::Pretty::Console qw(format_pretty);
@@ -113,6 +117,14 @@ my @data = (
         opts         => {table_column_orders=>[[qw/foo bar baz qux/]]},
         struct       => 'aoh',
         output_re    => qr/^\| a \| bar \| bat \| baz \| foo \| quux \|\n/m,
+    },
+    {
+        name         => 'opt table_column_formats',
+        data         => [{date1=>942595047, _date=>1342595047}],
+        opts         => {table_column_formats=>[
+            {_date=>[[date=>{format=>"%Y"}]], date1=>"cat"}]},
+        struct       => 'aoh',
+        output_re    => qr/2012/m, # XXX and not /1999/
     },
 
 );
