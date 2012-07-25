@@ -1,5 +1,12 @@
 Revision history for Data-Format-Pretty-Console
 
+0.16     2012-07-25 (SHARYANTO)
+
+         Don't decode utf8, it will result in 'Cannot decode strings with wide
+         character' error when string contains utf8 + I/O (e.g. stdout) already
+         :utf8.
+
+
 0.15     2012-07-18 (SHARYANTO)
 
          Better detection of words in column name (e.g. 'parseDate', 'TIME1')
