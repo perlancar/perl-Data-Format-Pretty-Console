@@ -259,7 +259,7 @@ sub _format_list {
     my ($self, $data) = @_;
     # format list as as one-column table, elements as rows
     if ($self->{opts}{interactive}) {
-        my $t = Text::ASCIITable->new(); #{headingText => 'blah'}
+        my $t = Text::ASCIITable->new({utf8=>0}); #{headingText => 'blah'}
         $t->setCols("data");
         for my $i (0..@$data-1) {
             $t->addRow($self->_format_cell($data->[$i]));
@@ -279,7 +279,7 @@ sub _format_hash {
     my ($self, $data) = @_;
     # format hash as two-column table
     if ($self->{opts}{interactive}) {
-        my $t = Text::ASCIITable->new(); #{headingText => 'blah'}
+        my $t = Text::ASCIITable->new({utf8=>0}); #{headingText => 'blah'}
         $t->setCols("key", "value");
         for my $k (sort keys %$data) {
             $t->addRow($k, $self->_format_cell($data->{$k}));
@@ -300,7 +300,7 @@ sub _format_aoa {
     # show aoa as table
     if ($self->{opts}{interactive}) {
         if (@$data) {
-            my $t = Text::ASCIITable->new(); #{headingText => 'blah'}
+            my $t = Text::ASCIITable->new({utf8=>0}); #{headingText => 'blah'}
             $t->setCols(map { "column$_" } 0..@{ $data->[0] }-1);
             for my $i (0..@$data-1) {
                 $t->addRow(map {$self->_format_cell($_)} @{ $data->[$i] });
@@ -327,7 +327,7 @@ sub _format_aoh {
     my @cols = @{ $self->_order_table_columns(
         [keys %{$struct_meta->{columns}}]) };
     if ($self->{opts}{interactive}) {
-        my $t = Text::ASCIITable->new(); #{headingText => 'blah'}
+        my $t = Text::ASCIITable->new({utf8=>0}); #{headingText => 'blah'}
         $t->setCols(@cols);
         for my $i (0..@$data-1) {
             my $row = $data->[$i];
