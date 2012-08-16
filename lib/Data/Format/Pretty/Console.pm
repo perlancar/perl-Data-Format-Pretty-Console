@@ -269,6 +269,7 @@ sub _format_list {
 
         my $maxwidth = List::Util::max(map { length } @rows) // 0;
         my ($termcols, $termrows) = Term::Size::chars(*STDOUT{IO});
+        $termcols //= 0; # if undetected
         my $numcols = 1;
         if ($maxwidth) {
             # | some-text-some | some-text-some... |
