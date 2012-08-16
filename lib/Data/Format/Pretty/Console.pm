@@ -275,6 +275,8 @@ sub _format_list {
             # 2/\__maxwidth__/\3/\__maxwidth__/...\2
             #
             # table width = (2+maxwidth) + (3+maxwidth)*(numcols-1) + 2
+            #
+            # so with a bit of algrebra, solve for numcols:
             $numcols = int( (($termcols-1)-$maxwidth-6)/(3+$maxwidth) + 1 );
             $numcols = @rows if $numcols > @rows;
             $numcols = 1 if $numcols < 1;
