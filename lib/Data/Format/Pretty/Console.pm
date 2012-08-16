@@ -271,6 +271,9 @@ sub _format_list {
         my ($termcols, $termrows) = Term::Size::chars(*STDOUT{IO});
         my $numcols = 1;
         if ($maxwidth) {
+            # | some-text-some | some-text-some... |
+            # 2/\__maxwidth__/\3/\__maxwidth__/...\2
+            #
             # table width = (2+maxwidth) + (3+maxwidth)*(numcols-1) + 2
             $numcols = int( (($termcols-1)-$maxwidth-6)/(3+$maxwidth) + 1 );
             $numcols = @rows if $numcols > @rows;
