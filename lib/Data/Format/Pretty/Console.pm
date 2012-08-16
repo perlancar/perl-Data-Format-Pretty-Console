@@ -283,6 +283,7 @@ sub _format_list {
         }
         my $numrows = POSIX::ceil(@rows/$numcols);
         if ($numrows) {
+            # reduce number of columns to avoid empty columns
             $numcols = POSIX::ceil(@rows/$numrows);
         }
         #say "D: $numcols x $numrows";
