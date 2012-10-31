@@ -631,8 +631,8 @@ Specify formats for columns. Each table format specification is a hashref
 {COLNAME=>FMT, COLNAME2=>FMT2, ...}. It will be applied to a table if the table
 has all the columns. FMT is a format specification according to
 L<Data::Unixish::Apply>, it's basically either a name of a dux function (e.g.
-'date') or an array of function name + arguments (e.g. ['date', [align =>
-{align=>'middle'}]].
+C<"date">) or an array of function name + arguments (e.g. C<< [['date', [align
+=> {align=>'middle'}]] >>).
 
 =back
 
