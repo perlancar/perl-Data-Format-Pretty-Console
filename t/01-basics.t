@@ -109,7 +109,12 @@ my @data = (
         data         => [{a=>1, bat=>1, foo=>1, bar=>1, baz=>1, quux=>1}],
         opts         => {table_column_orders=>[[qw/foo bar baz/]]},
         struct       => 'aoh',
-        output_re    => qr/^\| a \| foo \| bar \| bat \| baz \| quux \|\n/m,
+        output_re    =>
+            qr/^
+               (\|\s+a\s+\|\s+foo\s+\|\s+bar\s+\|\s+bat\s+\|\s+baz\s+\|\s+quux\s+\|
+               #|\|\s+a\s+\|\s+bat\s+\|\s+foo\s+\|\s+bar\s+\|\s+baz\s+\|\s+quux\s+\|
+               #|\|\s+a\s+\|\s+bar\s+\|\s+bat\s+\|\s+foo\s+\|\s+baz\s+\|\s+quux\s+\|
+               )\n/mx,
     },
     {
         name         => 'opt table_column_orders (no order matches)',
@@ -122,7 +127,7 @@ my @data = (
         name         => 'opt table_column_formats',
         data         => [{fooDate=>942595047, _time1=>1342595047}],
         opts         => {table_column_formats=>[
-            {_date=>[[fooDate=>"cat", _time1=>{format=>"%Y"}]]}]},
+            {fooDate=>["cat"], _time1=>[[date=>{format=>"%Y"}]]}]},
         struct       => 'aoh',
         output_re    => qr/2012/m, # XXX and not /1999/
     },

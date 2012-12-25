@@ -190,6 +190,7 @@ sub _format_table_columns {
         my $res = Data::Unixish::Apply::apply(in => \@vals, functions => $fmt);
         unless ($res->[0] == 200) {
             $log->warnf("Can't format column %s with %s, skipped", $col, $fmt);
+            #warn "Can't format column $col with $fmt ($res->[0] - $res->[1]), skipped";
             next;
         }
         # inject back column values into table
@@ -458,7 +459,7 @@ sub _order_table_columns {
             (defined($orders{$a}) && defined($orders{$b}) ?
                  $orders{$a} <=> $orders{$b} : 0)
                 || $a cmp $b
-        } @$cols;
+        } (sort @$cols);
     } else {
         @ocols = sort @$cols;
     }
