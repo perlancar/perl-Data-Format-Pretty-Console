@@ -23,7 +23,8 @@ sub format_pretty {
 
 1;
 # ABSTRACT: Pretty-print data structure as text
-__END__
+
+=for Pod::Coverage ^(content_type)$
 
 =head1 SYNOPSIS
 

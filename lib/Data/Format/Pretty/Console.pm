@@ -469,7 +469,8 @@ sub _order_table_columns {
 
 1;
 # ABSTRACT: Pretty-print data structure for console output
-__END__
+
+=for Pod::Coverage ^(content_type)$
 
 =head1 SYNOPSIS
 
@@ -623,8 +624,6 @@ But this table will:
 into:
 
  |apple|foo|bar|baz|quux|
-
-=back
 
 =item * table_column_formats => [{COLNAME=>FMT, ...}, ...]
 
