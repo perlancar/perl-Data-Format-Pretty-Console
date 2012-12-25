@@ -39,6 +39,7 @@ sub new {
     $opts->{table_column_formats} //= $json->decode(
         $ENV{FORMAT_PRETTY_TABLE_COLUMN_FORMATS})
         if defined($ENV{FORMAT_PRETTY_TABLE_COLUMN_FORMATS});
+    $opts->{list_max_columns} //= $ENV{FORMAT_PRETTY_LIST_MAX_COLUMNS};
     bless {opts=>$opts}, $class;
 }
 
@@ -283,6 +284,9 @@ sub _format_list {
             $numcols = @rows if $numcols > @rows;
             $numcols = 1 if $numcols < 1;
         }
+        $numcols = $self->{opts}{list_max_columns}
+            if defined($self->{opts}{list_max_columns}) &&
+                $numcols > $self->{opts}{list_max_columns};
         my $numrows = POSIX::ceil(@rows/$numcols);
         if ($numrows) {
             # reduce number of columns to avoid empty columns
@@ -608,6 +612,12 @@ If set, will override interactive terminal detection (-t STDOUT). Simpler
 formatting will be done if terminal is non-interactive (e.g. when output is
 piped). Using this option will force simpler/full formatting.
 
+=item * list_max_columns => INT
+
+When displaying list as columns, specify maximum number of columns. This can be
+used to force fewer columns (for example, single column) instead of using the
+whole available terminal width.
+
 =item * table_column_orders => [[COLNAME1, COLNAME2], ...]
 
 Specify column orders when drawing a table. If a table has all the columns, then
@@ -641,13 +651,30 @@ C<"date">) or an array of function name + arguments (e.g. C<< [['date', [align
 
 =over 4
 
+=item * FORMAT_PRETTY_LIST_MAX_COLUMNS
+
+To set C<list_max_columns> option.
+
 =item * FORMAT_PRETTY_TABLE_COLUMN_FORMATS
 
-To set table_column_formats, interpreted as JSON.
+To set C<table_column_formats> option, interpreted as JSON.
 
 =item * FORMAT_PRETTY_TABLE_COLUMN_ORDERS
 
-To set table_column_orders, interpreted as JSON.
+To set C<table_column_orders> option, interpreted as JSON.
+
+=back
+
+
+=head1 TODO
+
+=over
+
+=item * when displaying list in columns, option to fill column-wise instead of row-wise
+
+This is like 'ls -x' (our default) vs 'ls'.
+
+Probably set via C<list_fill_by_columns> option.
 
 =back
 
