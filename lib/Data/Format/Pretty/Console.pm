@@ -604,7 +604,7 @@ This module uses L<Log::Any> for logging.
 
 Return formatted data structure. Options:
 
-=over 4
+=over
 
 =item * interactive => BOOL (optional, default undef)
 
@@ -649,7 +649,7 @@ C<"date">) or an array of function name + arguments (e.g. C<< [['date', [align
 
 =head1 ENVIRONMENT
 
-=over 4
+=over
 
 =item * FORMAT_PRETTY_LIST_MAX_COLUMNS
 
