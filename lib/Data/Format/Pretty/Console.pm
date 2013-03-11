@@ -3,8 +3,9 @@ package Data::Format::Pretty::Console;
 use 5.010;
 use strict;
 use warnings;
-
 use Log::Any '$log';
+
+use Data::Unixish::Apply 1.25;
 use Parse::VarName qw(split_varname_words);
 use Scalar::Util qw(blessed);
 use Text::ASCIITable;
@@ -174,20 +175,18 @@ sub _detect_struct {
 }
 
 sub _format_table_columns {
-    require Data::Unixish::Apply;
-
     my ($self, $t, $tcf) = @_;
 
-    my $num_rows = @{ $t->{tbl_rows} };
+    my $num_rows = @{ $t->{rows} };
     for my $col (keys %$tcf) {
         my $fmt = $tcf->{$col};
         my $i;
-        for (0..@{ $t->{tbl_cols} }-1) {
-            do { $i = $_; last } if $col eq $t->{tbl_cols}[$_];
+        for (0..@{ $t->{rows} }-1) {
+            do { $i = $_; last } if $col eq $t->{cols}[$_];
         }
         next unless defined $i; # col not found in table
         # extract column values from table
-        my @vals = map { $t->{tbl_rows}[$_][$i] } 0..$num_rows-1;
+        my @vals = map { $t->{rows}[$_][$i] } 0..$num_rows-1;
         my $res = Data::Unixish::Apply::apply(in => \@vals, functions => $fmt);
         unless ($res->[0] == 200) {
             $log->warnf("Can't format column %s with %s, skipped", $col, $fmt);
@@ -196,10 +195,14 @@ sub _format_table_columns {
         }
         # inject back column values into table
         @vals = @{ $res->[2] };
-        for (0..@vals-1) { $t->{tbl_rows}[$_][$i] = $vals[$_] }
+        for (0..@vals-1) { $t->{rows}[$_][$i] = $vals[$_] }
     }
 }
 
+# t (table) is a structure like this: {cols=>["colName1", "colName2", ...]},
+# rows=>[ [row1.1, row1.2, ...], [row2.1, row2.2, ...], ... ], at_opts=>{...},
+# col_widths=>{colName1=>5, ...}}. the job of this routine is to render it
+# (currently uses Text::ASCIITable).
 sub _render_table {
     my ($self, $t) = @_;
 
@@ -210,7 +213,7 @@ sub _render_table {
     if ($tcff) {
         for my $tcf (@$tcff) {
             my $match = 1;
-            my @tcols = @{ $t->{tbl_cols} };
+            my @tcols = @{ $t->{cols} };
             for my $scol (keys %$tcf) {
                 do { $match = 0; last } unless $scol ~~ @tcols;
             }
@@ -224,7 +227,7 @@ sub _render_table {
     # if not, pick some defaults (e.g. date)
     unless ($colfmts) {
         $colfmts = {};
-        for (@{ $t->{tbl_cols} }) {
+        for (@{ $t->{cols} }) {
             # fooTime or FOOtime should also be detected
             my @words = map {lc} @{ split_varname_words(varname=>$_) };
             if ("date" ~~ @words ||
@@ -241,7 +244,18 @@ sub _render_table {
     }
 
     $self->_format_table_columns($t, $colfmts) if $colfmts;
-    "$t";
+
+    # render using Text::ASCIITable
+    my $at = Text::ASCIITable->new({utf8=>0});
+    $at->setOptions($_ => $t->{at_opts}{$_}) for keys %{ $t->{at_opts} // {} };
+    $at->setCols(@{ $t->{cols} });
+    if ($t->{col_widths}) {
+        for my $c (keys %{ $t->{col_widths} }) {
+            $at->setColWidth($c, $t->{col_widths}{$c}, 1);
+        }
+    }
+    $at->addRow(@$_) for @{ $t->{rows} };
+    "$at";
 }
 
 # format unknown structure, the default is to dump YAML structure
@@ -294,11 +308,10 @@ sub _format_list {
         }
         #say "D: $numcols x $numrows";
 
-        my $t = Text::ASCIITable->new({utf8=>0}); #{headingText => 'blah'}
-        $t->setOptions({hide_HeadRow=>1, hide_HeadLine=>1});
-        $t->setCols(map { "c$_" } 1..$numcols);
+        my $t = {rows=>[], at_opts=>{hide_HeadRow=>1, hide_HeadLine=>1}};
+        $t->{cols} = [map { "c$_" } 1..$numcols];
         if ($numcols > 1) {
-            $t->setColWidth("c$_", $maxwidth, 1) for 1..$numcols;
+            $t->{col_widths}{"c$_"} = $maxwidth for 1..$numcols;
         }
         for my $r (1..$numrows) {
             my @trow;
@@ -306,7 +319,7 @@ sub _format_list {
                 my $idx = ($c-1)*$numrows + ($r-1);
                 push @trow, $idx < @rows ? $rows[$idx] : '';
             }
-            $t->addRow(@trow);
+            push @{$t->{rows}}, \@trow;
         }
 
         return $self->_render_table($t);
@@ -324,12 +337,11 @@ sub _format_hash {
     my ($self, $data) = @_;
     # format hash as two-column table
     if ($self->{opts}{interactive}) {
-        my $t = Text::ASCIITable->new({utf8=>0}); #{headingText => 'blah'}
-        $t->setCols("key", "value");
+        my $t = {cols=>[qw/key value/], rows=>[],
+                 at_opts=>{hide_HeadRow=>0, hide_HeadLine=>0}};
         for my $k (sort keys %$data) {
-            $t->addRow($k, $self->_format_cell($data->{$k}));
+            push @{ $t->{rows} }, [$k, $self->_format_cell($data->{$k})];
         }
-        $t->setOptions({hide_HeadRow=>1, hide_HeadLine=>1});
         return $self->_render_table($t);
     } else {
         my @t;
@@ -345,12 +357,12 @@ sub _format_aoa {
     # show aoa as table
     if ($self->{opts}{interactive}) {
         if (@$data) {
-            my $t = Text::ASCIITable->new({utf8=>0}); #{headingText => 'blah'}
-            $t->setCols(map { "column$_" } 0..@{ $data->[0] }-1);
+            my $t = {rows=>[], at_opts=>{hide_HeadRow=>0, hide_HeadLine=>0}};
+            $t->{cols} = [map { "column$_" } 0..@{ $data->[0] }-1];
             for my $i (0..@$data-1) {
-                $t->addRow(map {$self->_format_cell($_)} @{ $data->[$i] });
+                push @{ $t->{rows} },
+                    [map {$self->_format_cell($_)} @{ $data->[$i] }];
             }
-            $t->setOptions({hide_HeadRow=>1, hide_HeadLine=>1});
             return $self->_render_table($t);
         } else {
             return "";
@@ -372,11 +384,10 @@ sub _format_aoh {
     my @cols = @{ $self->_order_table_columns(
         [keys %{$struct_meta->{columns}}]) };
     if ($self->{opts}{interactive}) {
-        my $t = Text::ASCIITable->new({utf8=>0}); #{headingText => 'blah'}
-        $t->setCols(@cols);
+        my $t = {cols=>\@cols, rows=>[]};
         for my $i (0..@$data-1) {
             my $row = $data->[$i];
-            $t->addRow(map {$self->_format_cell($row->{$_})} @cols);
+            push @{ $t->{rows} }, [map {$self->_format_cell($row->{$_})} @cols];
         }
         return $self->_render_table($t);
     } else {

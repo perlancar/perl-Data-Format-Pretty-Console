@@ -131,6 +131,15 @@ my @data = (
         struct       => 'aoh',
         output_re    => qr/2012/m, # XXX and not /1999/
     },
+    # first broken in 0.20
+    {
+        name         => "opt table_column_formats doesn't mess multiline text",
+        data         => [{text=>""}, {text=>"foo foo foo"}],
+        opts         => {table_column_formats=>[
+            {text=>[[wrap => {columns=>4}]]}]},
+        struct       => 'aoh',
+        output_re    => qr/^\| foo  \|\n\| foo  \|\n\| foo  \|\n/m,
+    },
 
     # XXX multi-column
     # XXX max_columns
