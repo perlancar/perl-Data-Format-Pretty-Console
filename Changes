@@ -1,5 +1,13 @@
 Revision history for Data-Format-Pretty-Console
 
+0.22     2013-04-12 (SHARYANTO)
+
+         [ENHANCEMENTS]
+
+         - Observe INTERACTIVE environment variable to set the default for
+           'interactive' option (overrides (-t STDOUT) detection).
+
+
 0.21     2013-03-11 (SHARYANTO)
 
          [BUG FIXES]
