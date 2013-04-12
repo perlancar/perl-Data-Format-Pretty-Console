@@ -33,7 +33,7 @@ sub format_pretty {
 sub new {
     my ($class, $opts) = @_;
     $opts //= {};
-    $opts->{interactive} //= (-t STDOUT);
+    $opts->{interactive} //= $ENV{INTERACTIVE} // (-t STDOUT);
     $opts->{table_column_orders} //= $json->decode(
         $ENV{FORMAT_PRETTY_TABLE_COLUMN_ORDERS})
         if defined($ENV{FORMAT_PRETTY_TABLE_COLUMN_ORDERS});
@@ -661,6 +661,10 @@ C<"date">) or an array of function name + arguments (e.g. C<< [['date', [align
 =head1 ENVIRONMENT
 
 =over
+
+=item * INTERACTIVE (bool)
+
+To set default for C<interactive> option (overrides automatic detection).
 
 =item * FORMAT_PRETTY_LIST_MAX_COLUMNS
 
