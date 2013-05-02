@@ -218,7 +218,7 @@ sub _render_table {
         $colfmts = undef unless keys %$colfmts;
     }
 
-    # render using Text::ASCIITable
+    # render using Text::ANSITable
     my $at = Text::ANSITable->new;
     $at->columns($t->{cols});
     $at->rows($t->{rows});
@@ -571,8 +571,8 @@ suitable for console programs. The idea of this module is that for you to just
 merrily dump data structure to the console, and this module will figure out how
 to best display your data to the end-user.
 
-Currently this module tries to display the data mostly as a nice ASCII table (or
-a series of ASCII tables), and failing that, display it as YAML.
+Currently this module tries to display the data mostly as a nice text table (or
+a series of text tables), and failing that, display it as YAML.
 
 This module takes piping into consideration, and will output a simpler, more
 suitable format when your user pipes your program's output into some other
