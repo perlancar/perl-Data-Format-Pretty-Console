@@ -9,6 +9,9 @@ use Data::Dump::Partial qw(dumpp);
 use Data::Format::Pretty::Console qw(format_pretty);
 use YAML::Any;
 
+local $ENV{ANSITABLE_BORDER_STYLE} = 'single_ascii';
+local $ENV{ANSITABLE_COLOR_THEME}  = 'no_color';
+
 my @data = (
     {
         data         => undef,
@@ -185,6 +188,7 @@ sub test_dnf {
         {
             $output = format_pretty($data, {%$opts, interactive=>1});
         }
+        #say $output;
         if (exists($spec->{output})) {
             is($output, $spec->{output}, "$test_name: output exact match");
         }

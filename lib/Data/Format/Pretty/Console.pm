@@ -5,10 +5,10 @@ use strict;
 use warnings;
 use Log::Any '$log';
 
-use Data::Unixish::Apply 1.25;
+use Data::Unixish::Apply;
 use Parse::VarName qw(split_varname_words);
 use Scalar::Util qw(blessed);
-use Text::ASCIITable;
+use Text::ANSITable;
 use YAML::Any;
 use JSON;
 
@@ -174,35 +174,10 @@ sub _detect_struct {
     ($struct, $struct_meta);
 }
 
-sub _format_table_columns {
-    my ($self, $t, $tcf) = @_;
-
-    my $num_rows = @{ $t->{rows} };
-    for my $col (keys %$tcf) {
-        my $fmt = $tcf->{$col};
-        my $i;
-        for (0..@{ $t->{rows} }-1) {
-            do { $i = $_; last } if $col eq $t->{cols}[$_];
-        }
-        next unless defined $i; # col not found in table
-        # extract column values from table
-        my @vals = map { $t->{rows}[$_][$i] } 0..$num_rows-1;
-        my $res = Data::Unixish::Apply::apply(in => \@vals, functions => $fmt);
-        unless ($res->[0] == 200) {
-            $log->warnf("Can't format column %s with %s, skipped", $col, $fmt);
-            #warn "Can't format column $col with $fmt ($res->[0] - $res->[1]), skipped";
-            next;
-        }
-        # inject back column values into table
-        @vals = @{ $res->[2] };
-        for (0..@vals-1) { $t->{rows}[$_][$i] = $vals[$_] }
-    }
-}
-
 # t (table) is a structure like this: {cols=>["colName1", "colName2", ...]},
 # rows=>[ [row1.1, row1.2, ...], [row2.1, row2.2, ...], ... ], at_opts=>{...},
 # col_widths=>{colName1=>5, ...}}. the job of this routine is to render it
-# (currently uses Text::ASCIITable).
+# (currently uses Text::ANSITable).
 sub _render_table {
     my ($self, $t) = @_;
 
@@ -243,19 +218,21 @@ sub _render_table {
         $colfmts = undef unless keys %$colfmts;
     }
 
-    $self->_format_table_columns($t, $colfmts) if $colfmts;
-
     # render using Text::ASCIITable
-    my $at = Text::ASCIITable->new({utf8=>0});
-    $at->setOptions($_ => $t->{at_opts}{$_}) for keys %{ $t->{at_opts} // {} };
-    $at->setCols(@{ $t->{cols} });
-    if ($t->{col_widths}) {
-        for my $c (keys %{ $t->{col_widths} }) {
-            $at->setColWidth($c, $t->{col_widths}{$c}, 1);
-        }
+    my $at = Text::ANSITable->new;
+    $at->columns($t->{cols});
+    $at->rows($t->{rows});
+    if ($t->{at_opts}) {
+        $at->{$_} = $t->{at_opts}{$_} for keys %{ $t->{at_opts} };
     }
-    $at->addRow(@$_) for @{ $t->{rows} };
-    "$at";
+    if ($colfmts) {
+        $at->column_style($_ => formats => $colfmts->{$_}) for keys %$colfmts;
+    }
+    if ($t->{col_widths}) {
+        $at->column_style($_ => width => $t->{col_widths}{$_})
+            for keys %{ $t->{col_widths} };
+    }
+    $at->draw;
 }
 
 # format unknown structure, the default is to dump YAML structure
@@ -308,7 +285,7 @@ sub _format_list {
         }
         #say "D: $numcols x $numrows";
 
-        my $t = {rows=>[], at_opts=>{hide_HeadRow=>1, hide_HeadLine=>1}};
+        my $t = {rows=>[], at_opts=>{show_header=>0}};
         $t->{cols} = [map { "c$_" } 1..$numcols];
         if ($numcols > 1) {
             $t->{col_widths}{"c$_"} = $maxwidth for 1..$numcols;
@@ -338,7 +315,7 @@ sub _format_hash {
     # format hash as two-column table
     if ($self->{opts}{interactive}) {
         my $t = {cols=>[qw/key value/], rows=>[],
-                 at_opts=>{hide_HeadRow=>0, hide_HeadLine=>0}};
+                 at_opts=>{}};
         for my $k (sort keys %$data) {
             push @{ $t->{rows} }, [$k, $self->_format_cell($data->{$k})];
         }
@@ -357,7 +334,7 @@ sub _format_aoa {
     # show aoa as table
     if ($self->{opts}{interactive}) {
         if (@$data) {
-            my $t = {rows=>[], at_opts=>{hide_HeadRow=>0, hide_HeadLine=>0}};
+            my $t = {rows=>[], at_opts=>{}};
             $t->{cols} = [map { "column$_" } 0..@{ $data->[0] }-1];
             for my $i (0..@$data-1) {
                 push @{ $t->{rows} },
@@ -696,7 +673,7 @@ Probably set via C<list_fill_by_columns> option.
 
 =head1 SEE ALSO
 
-Modules used for formatting: L<Text::ASCIITable>, L<YAML>.
+Modules used for formatting: L<Text::ANSITable>, L<YAML>.
 
 L<Data::Format::Pretty>
 
