@@ -1,5 +1,10 @@
 Revision history for Data-Format-Pretty-Console
 
+0.23     2013-05-02 (SHARYANTO)
+
+         - Switch from Text::ASCIITable to Text::ANSITable.
+
+
 0.22     2013-04-12 (SHARYANTO)
 
          [ENHANCEMENTS]
