@@ -226,7 +226,8 @@ sub _render_table {
         $at->{$_} = $t->{at_opts}{$_} for keys %{ $t->{at_opts} };
     }
     if ($colfmts) {
-        $at->set_column_style($_ => $colfmts);
+        $at->set_column_style($_ => formats => $colfmts->{$_})
+            for keys %$colfmts;
     }
     if ($t->{col_widths}) {
         $at->set_column_style($_ => width => $t->{col_widths}{$_})
