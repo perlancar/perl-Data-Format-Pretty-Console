@@ -226,10 +226,10 @@ sub _render_table {
         $at->{$_} = $t->{at_opts}{$_} for keys %{ $t->{at_opts} };
     }
     if ($colfmts) {
-        $at->column_style($_ => formats => $colfmts->{$_}) for keys %$colfmts;
+        $at->set_column_style($_ => $colfmts);
     }
     if ($t->{col_widths}) {
-        $at->column_style($_ => width => $t->{col_widths}{$_})
+        $at->set_column_style($_ => width => $t->{col_widths}{$_})
             for keys %{ $t->{col_widths} };
     }
     $at->draw;
