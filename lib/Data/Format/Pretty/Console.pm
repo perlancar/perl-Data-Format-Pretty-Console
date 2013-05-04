@@ -262,7 +262,7 @@ sub _format_list {
         my @rows = map { $self->_format_cell($_) } @$data;
 
         my $maxwidth = List::Util::max(map { length } @rows) // 0;
-        my ($termcols, $termrows) = Term::Size::chars(*STDOUT{IO});
+        my ($termcols, $termrows) = Term::Size::chars();
         $termcols //= 0; # if undetected
         my $numcols = 1;
         if ($maxwidth) {
