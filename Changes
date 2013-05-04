@@ -1,5 +1,12 @@
 Revision history for Data-Format-Pretty-Console
 
+0.25     2013-05-04 (SHARYANTO)
+
+         No functional changes. Work around bug in Term::Size::chars() that
+         resets binmode(STDOUT, ":utf8") if we do Term::Size::chars(*STDOUT{IO})
+         or Term::Size::chars(*STDOUT) instead of just Term::Size::chars().
+
+
 0.24     2013-05-03 (SHARYANTO)
 
          No functional changes. Adjust to Text::ANSITable 0.06+.
