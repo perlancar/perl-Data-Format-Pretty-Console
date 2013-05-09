@@ -6,7 +6,6 @@ use warnings;
 use Log::Any '$log';
 
 use Data::Unixish::Apply;
-use Parse::VarName qw(split_varname_words);
 use Scalar::Util qw(blessed);
 use Text::ANSITable;
 use YAML::Any;
@@ -197,25 +196,6 @@ sub _render_table {
                 last;
             }
         }
-    }
-
-    # if not, pick some defaults (e.g. date)
-    unless ($colfmts) {
-        $colfmts = {};
-        for (@{ $t->{cols} }) {
-            # fooTime or FOOtime should also be detected
-            my @words = map {lc} @{ split_varname_words(varname=>$_) };
-            if ("date" ~~ @words ||
-                    "time" ~~ @words ||
-                        "ctime" ~~ @words ||
-                            "mtime" ~~ @words ||
-                                "utime" ~~ @words ||
-                                    "stime" ~~ @words
-                                ) {
-                $colfmts->{$_} = 'date';
-            }
-        }
-        $colfmts = undef unless keys %$colfmts;
     }
 
     # render using Text::ANSITable
