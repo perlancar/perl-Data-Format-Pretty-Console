@@ -1,5 +1,12 @@
 Revision history for Data-Format-Pretty-Console
 
+0.26     2013-05-14 (SHARYANTO)
+
+         No functional changes. Replace use of Term::Size with
+         Term::Size::ReadKey due to bug like RT#38594 still present in
+         Term::Size.
+
+
 0.25     2013-05-04 (SHARYANTO)
 
          No functional changes. Work around bug in Term::Size::chars() that
