@@ -234,7 +234,7 @@ sub _format_list {
     if ($self->{opts}{interactive}) {
 
         require List::Util;
-        require Term::Size;
+        require Term::Size::ReadKey;
         require POSIX;
 
         # format list as as columns (a la 'ls' output)
@@ -242,7 +242,7 @@ sub _format_list {
         my @rows = map { $self->_format_cell($_) } @$data;
 
         my $maxwidth = List::Util::max(map { length } @rows) // 0;
-        my ($termcols, $termrows) = Term::Size::chars();
+        my ($termcols, $termrows) = Term::Size::ReadKey::chars();
         $termcols //= 0; # if undetected
         my $numcols = 1;
         if ($maxwidth) {
