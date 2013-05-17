@@ -1,5 +1,11 @@
 Revision history for Data-Format-Pretty-Console
 
+0.28     2013-05-17 (SHARYANTO)
+
+         Observe COLUMNS environment variable to override terminal width
+         detection.
+
+
 0.27     2013-05-15 (SHARYANTO)
 
          No functional changes. Due to Term::Size::ReadKey failing to get
