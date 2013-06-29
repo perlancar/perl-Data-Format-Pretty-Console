@@ -139,7 +139,7 @@ my @data = (
         name         => "opt table_column_formats doesn't mess multiline text",
         data         => [{text=>""}, {text=>"foo foo foo"}],
         opts         => {table_column_formats=>[
-            {text=>[[wrap => {columns=>4}]]}]},
+            {text=>[[wrap => {width=>4}]]}]},
         struct       => 'aoh',
         output_re    => qr/^\| foo  \|\n\| foo  \|\n\| foo  \|\n/m,
     },
