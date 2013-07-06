@@ -1,5 +1,11 @@
 Revision history for Data-Format-Pretty-Console
 
+0.29     2013-07-06 (SHARYANTO)
+
+         No functional changes. Add 'use experimental "smartmatch"' for 5.18+.
+         Fix test failure due to old version of dux.
+
+
 0.28     2013-05-17 (SHARYANTO)
 
          Observe COLUMNS environment variable to override terminal width
