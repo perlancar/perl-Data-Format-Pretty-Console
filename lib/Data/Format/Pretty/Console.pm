@@ -245,8 +245,7 @@ sub _format_list {
         my ($termcols, $termrows);
         if ($ENV{COLUMNS}) {
             $termcols = $ENV{COLUMNS};
-        } else {
-            require Term::Size;
+        } elsif (eval { require Term::Size; 1 }) {
             ($termcols, $termrows) = Term::Size::chars();
         }
         $termcols //= 0; # if undetected
