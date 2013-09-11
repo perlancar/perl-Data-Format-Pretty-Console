@@ -247,8 +247,11 @@ sub _format_list {
             $termcols = $ENV{COLUMNS};
         } elsif (eval { require Term::Size; 1 }) {
             ($termcols, $termrows) = Term::Size::chars();
+        } else {
+            # sane default, on windows we need to offset by 1 because printing
+            # at the rightmost column will cause cursor to move down one line.
+            $termcols = $^O =~ /Win/ ? 79 : 80;
         }
-        $termcols //= 0; # if undetected
         my $numcols = 1;
         if ($maxwidth) {
             # | some-text-some | some-text-some... |
