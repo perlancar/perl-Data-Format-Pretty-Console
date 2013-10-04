@@ -227,6 +227,7 @@ sub _format_scalar {
     my ($self, $data) = @_;
 
     my $sdata = defined($data) ? "$data" : "";
+    return "" if !length($sdata);
     return $sdata =~ /\n\z/s ? $sdata : "$sdata\n";
 }
 
