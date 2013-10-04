@@ -16,7 +16,19 @@ my @data = (
     {
         data         => undef,
         struct       => "scalar",
-        output       => "\n",
+        output       => "",
+    },
+
+    {
+        data         => "",
+        struct       => "scalar",
+        output       => "",
+    },
+
+    {
+        data         => " ",
+        struct       => "scalar",
+        output       => " \n",
     },
 
     {

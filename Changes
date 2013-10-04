@@ -1,5 +1,17 @@
 Revision history for Data-Format-Pretty-Console
 
+0.31     2013-10-04 (SHARYANTO)
+
+         [TWEAKS]
+
+         - Reduce terminal width by 1 on Windows to avoid moving to the next
+           line.
+
+         [INCOMPATIBLE CHANGES]
+
+         - Don't print "" as "\n". I think this is more appropriate.
+
+
 0.30     2013-09-11 (SHARYANTO)
 
          - No functional changes. Make Term::Size optional to install on
