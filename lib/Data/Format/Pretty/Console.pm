@@ -40,6 +40,9 @@ sub new {
     $opts->{table_column_formats} //= $json->decode(
         $ENV{FORMAT_PRETTY_TABLE_COLUMN_FORMATS})
         if defined($ENV{FORMAT_PRETTY_TABLE_COLUMN_FORMATS});
+    $opts->{table_column_types} //= $json->decode(
+        $ENV{FORMAT_PRETTY_TABLE_COLUMN_TYPES})
+        if defined($ENV{FORMAT_PRETTY_TABLE_COLUMN_TYPES});
     $opts->{list_max_columns} //= $ENV{FORMAT_PRETTY_LIST_MAX_COLUMNS};
     bless {opts=>$opts}, $class;
 }
@@ -182,8 +185,6 @@ sub _render_table {
     my ($self, $t) = @_;
 
     my $colfmts;
-
-    # does table match this setting?
     my $tcff = $self->{opts}{table_column_formats};
     if ($tcff) {
         for my $tcf (@$tcff) {
@@ -199,6 +200,22 @@ sub _render_table {
         }
     }
 
+    my $coltypes;
+    my $tctt = $self->{opts}{table_column_types};
+    if ($tctt) {
+        for my $tct (@$tctt) {
+            my $match = 1;
+            my @tcols = @{ $t->{cols} };
+            for my $scol (keys %$tct) {
+                do { $match = 0; last } unless $scol ~~ @tcols;
+            }
+            if ($match) {
+                $coltypes = $tct;
+                last;
+            }
+        }
+    }
+
     # render using Text::ANSITable
     my $at = Text::ANSITable->new;
     $at->columns($t->{cols});
@@ -209,6 +226,10 @@ sub _render_table {
     if ($colfmts) {
         $at->set_column_style($_ => formats => $colfmts->{$_})
             for keys %$colfmts;
+    }
+    if ($coltypes) {
+        $at->set_column_style($_ => type => $coltypes->{$_})
+            for keys %$coltypes;
     }
     if ($t->{col_widths}) {
         $at->set_column_style($_ => width => $t->{col_widths}{$_})
@@ -620,7 +641,17 @@ Specify formats for columns. Each table format specification is a hashref
 has all the columns. FMT is a format specification according to
 L<Data::Unixish::Apply>, it's basically either a name of a dux function (e.g.
 C<"date">) or an array of function name + arguments (e.g. C<< [['date', [align
-=> {align=>'middle'}]] >>).
+=> {align=>'middle'}]] >>). This will be fed to L<Text::ANSITable>'s C<formats>
+column style.
+
+=item * table_column_types => [{COLNAME=>TYPE, ...}, ...]
+
+Specify types for columns. Each table format specification is a hashref
+{COLNAME=>TYPE, COLNAME2=>TYPE2, ...}. It will be applied to a table if the
+table has all the columns. TYPE is type name according to L<Sah> schema. This
+will be fed to L<Text::ANSITable>'s C<type> column style to give hints on how to
+format the column. Sometimes this is the simpler alternative to
+C<table_column_formats>.
 
 =back
 
@@ -640,6 +671,10 @@ To set C<list_max_columns> option.
 =item * FORMAT_PRETTY_TABLE_COLUMN_FORMATS => ARRAY (JSON)
 
 To set C<table_column_formats> option, interpreted as JSON.
+
+=item * FORMAT_PRETTY_TABLE_COLUMN_TYPES => ARRAY (JSON)
+
+To set C<table_column_types> option, interpreted as JSON.
 
 =item * FORMAT_PRETTY_TABLE_COLUMN_ORDERS => ARRAY (JSON)
 

@@ -155,7 +155,7 @@ my @data = (
         struct       => 'aoh',
         output_re    => qr/^\| foo  \|\n\| foo  \|\n\| foo  \|\n/m,
     },
-
+    # XXX opt table_column_types
     # XXX multi-column
     # XXX max_columns
 );
