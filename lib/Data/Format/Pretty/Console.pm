@@ -592,8 +592,6 @@ program.
 Most of the time, you don't have to configure anything, but some options are
 provided to tweak the output.
 
-This module uses L<Log::Any> for logging.
-
 
 =head1 FUNCTIONS
 
