@@ -685,19 +685,6 @@ To override terminal width detection.
 =back
 
 
-=head1 TODO
-
-=over
-
-=item * when displaying list in columns, option to fill column-wise instead of row-wise
-
-This is like 'ls -x' (our default) vs 'ls'.
-
-Probably set via C<list_fill_by_columns> option.
-
-=back
-
-
 =head1 SEE ALSO
 
 Modules used for formatting: L<Text::ANSITable>, L<YAML>.
