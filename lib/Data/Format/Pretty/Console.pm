@@ -1,10 +1,13 @@
 package Data::Format::Pretty::Console;
 
+# DATE
+# VERSION
+
 use 5.010001;
 use strict;
 use warnings;
 use experimental 'smartmatch';
-use Log::Any '$log';
+use Log::Any::IfLOG '$log';
 
 use Data::Unixish::Apply;
 use Scalar::Util qw(blessed);
@@ -17,8 +20,6 @@ my $json = JSON->new->allow_nonref;
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(format_pretty);
-
-# VERSION
 
 sub content_type { "text/plain" }
 
