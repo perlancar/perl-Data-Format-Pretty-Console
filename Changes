@@ -1,5 +1,12 @@
 Revision history for Data-Format-Pretty-Console
 
+0.34    2015-08-17 (PERLANCAR)
+
+	- No functional changes.
+
+	- Switch from Log::Any to Log::Any::IfLOG.
+
+
 0.33     2014-03-28 (SHARYANTO)
 
          [ENHANCEMENTS]
