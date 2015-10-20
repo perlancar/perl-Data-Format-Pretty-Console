@@ -9,7 +9,6 @@ use warnings;
 use experimental 'smartmatch';
 use Log::Any::IfLOG '$log';
 
-use Data::Unixish::Apply;
 use Scalar::Util qw(blessed);
 use Text::ANSITable;
 use YAML::Any;
