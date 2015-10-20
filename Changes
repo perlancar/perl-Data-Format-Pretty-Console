@@ -1,5 +1,12 @@
 Revision history for Data-Format-Pretty-Console
 
+0.35    2015-10-20 (PERLANCAR)
+
+	- No functional changes.
+
+	- Avoid runtime requires of Data::Unixish (now only TestRequires).
+
+
 0.34    2015-08-17 (PERLANCAR)
 
 	- No functional changes.
