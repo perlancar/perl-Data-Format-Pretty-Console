@@ -12,9 +12,9 @@ use Log::Any::IfLOG '$log';
 use Scalar::Util qw(blessed);
 use Text::ANSITable;
 use YAML::Any;
-use JSON;
+use JSON::MaybeXS;
 
-my $json = JSON->new->allow_nonref;
+my $json = JSON::MaybeXS->new->allow_nonref;
 
 require Exporter;
 our @ISA = qw(Exporter);
