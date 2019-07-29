@@ -268,7 +268,7 @@ sub _format_list {
         if ($ENV{COLUMNS}) {
             $termcols = $ENV{COLUMNS};
         } elsif (eval { require Term::Size; 1 }) {
-            ($termcols, $termrows) = Term::Size::chars();
+            ($termcols, $termrows) = Term::Size::chars(*STDOUT{IO});
         } else {
             # sane default, on windows we need to offset by 1 because printing
             # at the rightmost column will cause cursor to move down one line.
