@@ -1,3 +1,10 @@
+0.390   2021-04-22  Released-By: PERLANCAR; Urgency: medium
+
+	- [bugfix] Update color theme and border style name (RT#135253).
+
+	- [bugfix] Fix the use of Term::Size::chars().
+
+
 0.38    2017-07-10  Released-By: PERLANCAR
 
 	- No functional changes.
@@ -250,4 +257,3 @@
 0.01     2010-11-19  Released-By: SHARYANTO
 
          - First release.
-
