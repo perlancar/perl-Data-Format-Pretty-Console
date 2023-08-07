@@ -1,8 +1,5 @@
 package Data::Format::Pretty::Console;
 
-# DATE
-# VERSION
-
 use 5.010001;
 use strict;
 use warnings;
@@ -13,6 +10,11 @@ use Scalar::Util qw(blessed);
 use Text::ANSITable;
 use YAML::Any;
 use JSON::MaybeXS;
+
+# AUTHORITY
+# DATE
+# DIST
+# VERSION
 
 my $json = JSON::MaybeXS->new->allow_nonref;
 
@@ -191,7 +193,7 @@ sub _render_table {
             my $match = 1;
             my @tcols = @{ $t->{cols} };
             for my $scol (keys %$tcf) {
-                do { $match = 0; last } unless $scol ~~ @tcols;
+                do { $match = 0; last } unless grep { $_ eq $scol } @tcols;
             }
             if ($match) {
                 $colfmts = $tcf;
@@ -207,7 +209,7 @@ sub _render_table {
             my $match = 1;
             my @tcols = @{ $t->{cols} };
             for my $scol (keys %$tct) {
-                do { $match = 0; last } unless $scol ~~ @tcols;
+                do { $match = 0; last } unless grep { $_ eq $scol } @tcols;
             }
             if ($match) {
                 $coltypes = $tct;
@@ -443,8 +445,8 @@ sub _order_table_columns {
         for my $co (@$tco) {
             die "table_column_orders elements must all be arrayrefs"
                 unless ref($co) eq 'ARRAY';
-            for (@$co) {
-                next CO unless $_ ~~ @$cols;
+            for my $c (@$co) {
+                next CO unless grep { $_ == $c } @$cols;
             }
 
             $found++;

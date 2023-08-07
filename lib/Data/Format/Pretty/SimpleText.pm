@@ -10,6 +10,9 @@ require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(format_pretty);
 
+# AUTHORITY
+# DATE
+# DIST
 # VERSION
 
 sub content_type { "text/plain" }
